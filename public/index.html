@@ -3,365 +3,291 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gesto Smart • IG Story Studio Pro</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <title>Gesto Smart • Pro Studio</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Montserrat:wght@400;700;900&family=Pacifico&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS para UI rápida -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fabric.js Core: El motor gráfico profesional -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+
     <style>
-        :root {
-            --bg-color: #0b0f19;
-            --surface: #1e293b;
-            --surface-hover: #334155;
-            --primary: #38bdf8;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --border: #334155;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 10px; }
+        body { background-color: #0f172a; color: #f8fafc; overflow-x: hidden; }
         
-        .app-container {
-            background: var(--surface);
+        /* Contenedor responsivo del Canvas */
+        .canvas-wrapper {
             width: 100%;
-            max-width: 440px;
-            border-radius: 20px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-            border: 1px solid var(--border);
-        }
-
-        .header { padding: 12px; text-align: center; border-bottom: 1px solid var(--border); background: #0f172a; }
-        .header h1 { font-size: 15px; font-weight: 700; color: var(--primary); margin-bottom: 2px; }
-        .header p { font-size: 11px; color: var(--text-muted); }
-
-        .content-body {
-            padding: 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            max-height: 78vh;
-            overflow-y: auto;
-        }
-
-        .form-group { display: flex; flex-direction: column; gap: 4px; }
-        label { font-size: 11px; font-weight: 600; color: var(--text-muted); }
-
-        textarea {
-            width: 100%;
-            height: 55px;
-            padding: 8px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            font-size: 12px;
-            background: #0f172a;
-            color: white;
-            resize: none;
-            outline: none;
-        }
-        textarea:focus { border-color: var(--primary); }
-
-        .row-options {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-        }
-
-        select, input[type="file"], input[type="color"] {
-            width: 100%;
-            padding: 7px;
-            background: #0f172a;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: white;
-            font-size: 11px;
-            outline: none;
-        }
-
-        /* Vista Previa 9:16 Profesional con Fondo Difuminado Automático */
-        .preview-container {
-            width: 100%;
-            aspect-ratio: 9 / 16;
-            background: #0b0f19;
+            max-width: 400px;
+            margin: 0 auto;
+            position: relative;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
             border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px 12px;
-            position: relative;
             overflow: hidden;
-            border: 1px solid var(--border);
+            border: 1px solid #334155;
+            background-color: #000;
+            transition: aspect-ratio 0.3s ease;
         }
 
-        /* Fondo difuminado automático para rellenar el formato 9:16 sin cortar la imagen principal */
-        .preview-bg-blur {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            object-fit: cover;
-            filter: blur(20px) brightness(0.4);
-            transform: scale(1.1);
-            z-index: 1;
-            display: none;
+        /* Hack mágico para que Fabric.js se adapte visualmente sin perder los 1080p internos */
+        .canvas-container {
+            width: 100% !important;
+            height: 100% !important;
         }
-
-        /* Imagen principal intacta y centrada */
-        .media-wrapper {
-            width: 100%;
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            margin: 6px 0;
-            z-index: 2;
-            overflow: hidden;
-        }
-
-        .preview-main-img {
-            max-width: 100%;
-            max-height: 100%;
+        .canvas-container canvas {
+            width: 100% !important;
+            height: 100% !important;
             object-fit: contain;
-            border-radius: 6px;
-            display: none;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.8);
         }
 
-        .preview-bg-video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 6px;
-            display: none;
-            z-index: 2;
+        /* Estilos de botones y UI */
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid #334155;
         }
-
-        /* Tarjetas de texto */
-        .story-text-card {
-            width: 100%;
-            padding: 10px 14px;
-            border-radius: 10px;
-            text-align: center;
-            z-index: 10;
-        }
-
-        .style-classic {
-            background: rgba(11, 15, 25, 0.9);
-            backdrop-filter: blur(6px);
-            border: 1px solid rgba(56, 189, 248, 0.3);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        }
-        .style-neon {
-            background: rgba(15, 23, 42, 0.95);
-            border: 2px solid var(--primary);
-            box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
-        }
-        .style-raw {
-            background: transparent;
-            text-shadow: 0 2px 8px rgba(0,0,0,0.95), 0 0 12px rgba(0,0,0,0.9);
-        }
-
-        .story-text-content {
-            font-size: 14px;
-            line-height: 1.35;
-            word-break: break-word;
-            font-weight: 700;
-        }
-
-        .story-footer {
-            width: 100%;
-            display: flex;
-            justify-content: flex-end;
-            z-index: 10;
-        }
-
-        .ig-sticker {
-            background: linear-gradient(135deg, #38bdf8, #0284c7);
-            color: #0b0f19;
-            font-size: 9px;
-            font-weight: 800;
-            text-transform: uppercase;
-            padding: 4px 10px;
-            border-radius: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-            letter-spacing: 1px;
-        }
-
-        .controls {
-            padding: 10px 12px;
-            background: #0f172a;
-            border-top: 1px solid var(--border);
-            display: flex;
-            gap: 8px;
-        }
-
-        .btn {
-            background: var(--primary);
-            color: #0b0f19;
-            border: none;
-            padding: 11px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 700;
-            cursor: pointer;
-            flex: 1;
-            text-align: center;
-        }
+        
+        /* Ocultar input file original */
+        input[type="file"] { display: none; }
     </style>
 </head>
-<body>
+<body class="flex flex-col min-h-screen">
 
-<div class="app-container">
-    <div class="header">
-        <h1>Gesto Smart • IG Story Studio</h1>
-        <p>Tu imagen entera con fondo difuminado pro.</p>
-    </div>
+    <!-- Header -->
+    <header class="p-4 text-center border-b border-slate-700 bg-slate-900">
+        <h1 class="text-lg font-black text-sky-400 tracking-tight">GESTO SMART <span class="text-white">STUDIO</span></h1>
+        <p class="text-xs text-slate-400 mt-1">Motor de Canvas HD (Arrastrá y editá libremente)</p>
+    </header>
 
-    <div class="content-body">
-        <div class="form-group">
-            <label>📝 Texto Superior (Dejar vacío si no se usa)</label>
-            <textarea id="input-main" placeholder="¿Cuánto tardás en hacer el catálogo? 😳"></textarea>
+    <!-- Área de Trabajo -->
+    <main class="flex-1 flex flex-col p-4 w-full max-w-md mx-auto gap-4 mb-32">
+        
+        <!-- Selector de Formato -->
+        <div class="flex gap-2 justify-center">
+            <button onclick="changeFormat(1080, 1920, '9/16')" class="format-btn bg-sky-500 text-slate-900 text-xs font-bold py-2 px-4 rounded-lg flex-1">Story 9:16</button>
+            <button onclick="changeFormat(1080, 1350, '4/5')" class="format-btn bg-slate-800 text-white border border-slate-700 text-xs font-bold py-2 px-4 rounded-lg flex-1">Post 4:5</button>
+            <button onclick="changeFormat(1080, 1080, '1/1')" class="format-btn bg-slate-800 text-white border border-slate-700 text-xs font-bold py-2 px-4 rounded-lg flex-1">Feed 1:1</button>
         </div>
 
-        <div class="form-group">
-            <label>💬 Texto Inferior (Dejar vacío si no se usa)</label>
-            <textarea id="input-sub" placeholder="Subí un excel y la magia ocurre sola 🚀">Y si te digo que en una app podés controlar todo? 🚀</textarea>
+        <!-- Lienzo (Canvas) -->
+        <div id="canvasWrapper" class="canvas-wrapper" style="aspect-ratio: 9/16;">
+            <canvas id="mainCanvas"></canvas>
         </div>
 
-        <div class="row-options">
-            <div class="form-group">
-                <label>Estilo de Tarjeta</label>
-                <select id="card-style-select">
-                    <option value="style-classic">Caja Clásica IG (Oscura)</option>
-                    <option value="style-neon">Caja Neón Pro</option>
-                    <option value="style-raw">Texto Libre (Sin Caja)</option>
+    </main>
+
+    <!-- Panel de Herramientas Fijo Abajo (Tipo IG/CapCut) -->
+    <div class="fixed bottom-0 left-0 w-full glass-panel p-4 pb-6 z-50">
+        <div class="max-w-md mx-auto">
+            
+            <!-- Herramientas de Texto (Solo visibles si hay texto seleccionado) -->
+            <div id="textToolbar" class="hidden grid grid-cols-4 gap-2 mb-4">
+                <select id="fontSelect" onchange="updateText('fontFamily', this.value)" class="col-span-2 bg-slate-800 text-xs p-2 rounded border border-slate-600 outline-none">
+                    <option value="Montserrat">Moderna (Montserrat)</option>
+                    <option value="Anton">Impacto (Anton)</option>
+                    <option value="Pacifico">Script (Pacifico)</option>
+                    <option value="Playfair Display">Elegante (Serif)</option>
                 </select>
+                <input type="color" id="colorPicker" onchange="updateText('fill', this.value)" value="#ffffff" class="w-full h-8 rounded cursor-pointer border-none p-0">
+                <button onclick="toggleTextBg()" class="bg-slate-700 text-xs font-bold rounded">Caja IG</button>
             </div>
-            <div class="form-group">
-                <label>Color de Tipografía</label>
-                <input type="color" id="text-color-picker" value="#ffffff">
-            </div>
-        </div>
 
-        <div class="form-group">
-            <label>Subir Imagen o Captura de Tienda</label>
-            <input type="file" id="media-file-input" accept="image/*,video/*">
-        </div>
+            <!-- Botones de Acción Principales -->
+            <div class="grid grid-cols-4 gap-2">
+                <label class="col-span-1 bg-slate-800 flex flex-col items-center justify-center py-3 rounded-xl border border-slate-600 cursor-pointer hover:bg-slate-700 transition">
+                    <span class="text-xl mb-1">🖼️</span>
+                    <span class="text-[10px] font-bold">Fondo</span>
+                    <input type="file" id="imageLoader" accept="image/*">
+                </label>
+                
+                <button onclick="addText()" class="col-span-1 bg-slate-800 flex flex-col items-center justify-center py-3 rounded-xl border border-slate-600 hover:bg-slate-700 transition">
+                    <span class="text-xl mb-1">🔤</span>
+                    <span class="text-[10px] font-bold">Texto</span>
+                </button>
 
-        <div class="form-group">
-            <label>Vista Previa Interactiva</label>
-            <div id="preview-box" class="preview-container">
-                <!-- Fondo difuminado automático -->
-                <img id="bg-blur-img" class="preview-bg-blur" alt="Blur Background">
+                <button onclick="deleteSelected()" class="col-span-1 bg-rose-900/50 flex flex-col items-center justify-center py-3 rounded-xl border border-rose-800 text-rose-300 hover:bg-rose-800 transition">
+                    <span class="text-xl mb-1">🗑️</span>
+                    <span class="text-[10px] font-bold">Borrar</span>
+                </button>
 
-                <!-- Bloque Superior -->
-                <div id="box-main" class="story-text-card style-classic" style="display: none;">
-                    <p id="text-main" class="story-text-content" style="color: #ffffff;"></p>
-                </div>
-
-                <!-- Imagen Principal Intacta -->
-                <div class="media-wrapper">
-                    <img id="main-img" class="preview-main-img" alt="Main Image">
-                    <video id="bg-video" class="preview-bg-video" autoplay muted loop playsinline></video>
-                </div>
-
-                <!-- Bloque Inferior + Sello -->
-                <div style="width: 100%; display: flex; flex-direction: column; gap: 6px; z-index: 10;">
-                    <div id="box-sub" class="story-text-card style-classic">
-                        <p id="text-sub" class="story-text-content" style="color: #ffffff;">Y si te digo que en una app podés controlar todo? 🚀</p>
-                    </div>
-                    <div class="story-footer">
-                        <div class="ig-sticker">gestosmart.app</div>
-                    </div>
-                </div>
+                <button onclick="downloadImage()" class="col-span-1 bg-sky-500 flex flex-col items-center justify-center py-3 rounded-xl text-slate-900 hover:bg-sky-400 transition shadow-lg shadow-sky-500/30">
+                    <span class="text-xl mb-1">📥</span>
+                    <span class="text-[10px] font-bold">Exportar</span>
+                </button>
             </div>
         </div>
     </div>
-
-    <div class="controls">
-        <button id="download-plate-btn" class="btn">📥 Descargar Historia Pro</button>
-    </div>
-</div>
 
 <script>
-    const inputMain = document.getElementById('input-main');
-    const inputSub = document.getElementById('input-sub');
-    const textMain = document.getElementById('text-main');
-    const textSub = document.getElementById('text-sub');
-    const boxMain = document.getElementById('box-main');
-    const boxSub = document.getElementById('box-sub');
-    const cardStyleSelect = document.getElementById('card-style-select');
-    const textColorPicker = document.getElementById('text-color-picker');
-    const mediaFileInput = document.getElementById('media-file-input');
-    const bgBlurImg = document.getElementById('bg-blur-img');
-    const mainImg = document.getElementById('main-img');
-    const bgVideo = document.getElementById('bg-video');
-    const previewBox = document.getElementById('preview-box');
-    const downloadPlateBtn = document.getElementById('download-plate-btn');
-
-    inputMain.addEventListener('input', (e) => {
-        textMain.innerText = e.target.value;
-        boxMain.style.display = e.target.value.trim() ? 'block' : 'none';
+    // 1. Inicialización del Motor Fabric.js
+    const canvas = new fabric.Canvas('mainCanvas', {
+        preserveObjectStacking: true, // Que el texto siempre quede arriba al tocar
+        backgroundColor: '#090d16'
     });
 
-    inputSub.addEventListener('input', (e) => {
-        textSub.innerText = e.target.value;
-        boxSub.style.display = e.target.value.trim() ? 'block' : 'none';
-    });
+    // Resolución interna fija (Alta Definición siempre)
+    let currentWidth = 1080;
+    let currentHeight = 1920;
+    canvas.setWidth(currentWidth);
+    canvas.setHeight(currentHeight);
 
-    cardStyleSelect.addEventListener('change', (e) => {
-        boxMain.className = `story-text-card ${e.target.value}`;
-        boxSub.className = `story-text-card ${e.target.value}`;
-    });
+    let currentBackgroundImage = null;
 
-    textColorPicker.addEventListener('input', (e) => {
-        textMain.style.color = e.target.value;
-        textSub.style.color = e.target.value;
-    });
+    // 2. Control de la interfaz cuando seleccionamos un objeto (Texto)
+    canvas.on('selection:created', showTextToolbar);
+    canvas.on('selection:updated', showTextToolbar);
+    canvas.on('selection:cleared', hideTextToolbar);
 
-    mediaFileInput.addEventListener('change', (e) => {
+    function showTextToolbar(e) {
+        if (e.selected[0].type === 'textbox') {
+            document.getElementById('textToolbar').classList.remove('hidden');
+            document.getElementById('colorPicker').value = e.selected[0].fill;
+            document.getElementById('fontSelect').value = e.selected[0].fontFamily;
+        }
+    }
+
+    function hideTextToolbar() {
+        document.getElementById('textToolbar').classList.add('hidden');
+    }
+
+    // 3. Sistema inteligente de carga de fondo (El CROP perfecto)
+    document.getElementById('imageLoader').addEventListener('change', function (e) {
         const file = e.target.files[0];
         if (!file) return;
-        const fileURL = URL.createObjectURL(file);
 
-        if (file.type.startsWith('video')) {
-            bgBlurImg.style.display = 'none';
-            mainImg.style.display = 'none';
-            bgVideo.src = fileURL;
-            bgVideo.style.display = 'block';
-            bgVideo.play();
-        } else {
-            bgVideo.style.display = 'none';
-            bgBlurImg.src = fileURL;
-            bgBlurImg.style.display = 'block';
-            mainImg.src = fileURL;
-            mainImg.style.display = 'block';
+        const reader = new FileReader();
+        reader.onload = function (f) {
+            fabric.Image.fromURL(f.target.result, function (img) {
+                currentBackgroundImage = img;
+                applyBackground();
+            });
+        };
+        reader.readAsDataURL(file);
+    });
+
+    function applyBackground() {
+        if (!currentBackgroundImage) return;
+        
+        const img = currentBackgroundImage;
+        // Matemáticas para hacer el "object-fit: cover" perfecto
+        const scale = Math.max(currentWidth / img.width, currentHeight / img.height);
+        
+        img.set({
+            originX: 'center',
+            originY: 'center',
+            left: currentWidth / 2,
+            top: currentHeight / 2,
+            scaleX: scale,
+            scaleY: scale
+        });
+
+        canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas));
+    }
+
+    // 4. Inserción de Texto (Estilo Instagram)
+    function addText() {
+        const text = new fabric.Textbox('DOBLE CLIC PARA EDITAR', {
+            left: currentWidth / 2,
+            top: currentHeight / 2,
+            originX: 'center',
+            originY: 'center',
+            width: 800,
+            fontSize: 70,
+            fontFamily: 'Montserrat',
+            fontWeight: 'bold',
+            fill: '#ffffff',
+            textAlign: 'center',
+            // Estilos del manipulador
+            cornerColor: '#38bdf8',
+            cornerStyle: 'circle',
+            borderColor: '#38bdf8',
+            transparentCorners: false,
+            padding: 20
+        });
+        canvas.add(text);
+        canvas.setActiveObject(text);
+    }
+
+    // 5. Actualización de propiedades del texto (Color, Fuente)
+    function updateText(property, value) {
+        const activeObj = canvas.getActiveObject();
+        if (activeObj && activeObj.type === 'textbox') {
+            activeObj.set(property, value);
+            canvas.renderAll();
+        }
+    }
+
+    // 6. Efecto "Caja Translúcida" estilo Instagram Stories
+    function toggleTextBg() {
+        const activeObj = canvas.getActiveObject();
+        if (activeObj && activeObj.type === 'textbox') {
+            if (activeObj.backgroundColor) {
+                activeObj.set('backgroundColor', null);
+            } else {
+                activeObj.set('backgroundColor', 'rgba(0, 0, 0, 0.65)');
+            }
+            canvas.renderAll();
+        }
+    }
+
+    // 7. Borrar objeto seleccionado
+    function deleteSelected() {
+        const activeObj = canvas.getActiveObject();
+        if (activeObj) {
+            canvas.remove(activeObj);
+            hideTextToolbar();
+        }
+    }
+
+    // Permitir borrar con tecla Delete/Backspace en PC
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Delete' && canvas.getActiveObject() && !canvas.getActiveObject().isEditing) {
+            deleteSelected();
         }
     });
 
-    downloadPlateBtn.addEventListener('click', async () => {
-        downloadPlateBtn.innerText = "Renderizando...";
-        downloadPlateBtn.disabled = true;
+    // 8. Cambio de Formato Inteligente (1 Clic)
+    function changeFormat(w, h, ratioStr) {
+        currentWidth = w;
+        currentHeight = h;
+        
+        // Ajustar Canvas Interno
+        canvas.setWidth(currentWidth);
+        canvas.setHeight(currentHeight);
+        
+        // Ajustar UI Externa Visual
+        document.getElementById('canvasWrapper').style.aspectRatio = ratioStr;
 
-        try {
-            await new Promise(r => setTimeout(r, 600));
-            const canvas = await html2canvas(previewBox, { useCORS: true, scale: 3 });
-            const link = document.createElement('a');
-            link.href = canvas.toDataURL("image/png");
-            link.download = `gesto-smart-story-${Date.now()}.png`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            downloadPlateBtn.innerText = "¡Listo en tu celu! 📥";
-        } catch (error) {
-            alert("Error: " + error.message);
-            downloadPlateBtn.innerText = "📥 Descargar Historia Pro";
-        } finally {
-            setTimeout(() => {
-                downloadPlateBtn.innerText = "📥 Descargar Historia Pro";
-                downloadPlateBtn.disabled = false;
-            }, 2000);
-        }
-    });
+        // Reajustar UI de botones
+        document.querySelectorAll('.format-btn').forEach(btn => {
+            btn.classList.remove('bg-sky-500', 'text-slate-900');
+            btn.classList.add('bg-slate-800', 'text-white', 'border-slate-700');
+        });
+        event.target.classList.add('bg-sky-500', 'text-slate-900');
+        event.target.classList.remove('bg-slate-800', 'text-white', 'border-slate-700');
+
+        // Reencuadrar fondo y renderizar
+        applyBackground();
+    }
+
+    // 9. Exportación en Alta Calidad Directa (Zero Server)
+    function downloadImage() {
+        // Deseleccionar todo para que no salgan los cuadritos azules de edición
+        canvas.discardActiveObject();
+        canvas.renderAll();
+
+        const dataURL = canvas.toDataURL({
+            format: 'png',
+            quality: 1,
+            multiplier: 1 // Como ya es 1080p, no hace falta multiplicar
+        });
+
+        const link = document.createElement('a');
+        link.download = `GestoSmart_Export_${Date.now()}.png`;
+        link.href = dataURL;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
 </script>
 </body>
 </html>
