@@ -71,25 +71,6 @@
             outline: none;
         }
 
-        .preview-box {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-        }
-
-        .preview-box img {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-
-        .preview-box span { font-size: 14px; font-weight: 500; color: #344054; }
-
         .controls {
             padding: 20px;
             background: var(--surface);
@@ -176,7 +157,8 @@
     <div id="success-screen" class="success-screen">
         <h2>¡Contenido en Producción! 🚀</h2>
         <p>El motor de IA está procesando tu foto y sintetizando el guion.</p>
-        <p>En unos minutos tendrás el video listo.</p>
+        <p>¡El sistema respondió con éxito y el video está en marcha!</p>
+        <button class="btn" style="background:#007aff; margin-top:10px;" onclick="location.reload()">Crear Otro</button>
     </div>
 </div>
 
@@ -213,7 +195,6 @@
         try {
             let photoUrlToUse = selectedPhoto;
 
-            // Si eligió subir una foto nueva al vuelo, la convertimos a base64 temporal
             if (selectedPhoto === 'custom' && customPhotoFile.files[0]) {
                 const file = customPhotoFile.files[0];
                 photoUrlToUse = await new Promise((resolve) => {
@@ -223,7 +204,7 @@
                 });
             }
 
-            const response = await fetch('/api/generate-from-text', {
+            const response = await fetch('/api/generate-avatar', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
