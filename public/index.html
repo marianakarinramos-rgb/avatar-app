@@ -113,61 +113,68 @@
             color: var(--text-muted);
         }
 
-        /* Vista Previa en Formato Reel/TikTok estricto (9:16) con fondo prolijo */
+        /* Vista Previa en Formato 9:16 nativo de Instagram/TikTok sin franjas negras */
         .preview-container {
             width: 100%;
             aspect-ratio: 9 / 16;
-            background: #0f172a;
-            border-radius: 10px;
+            background: #000;
+            border-radius: 12px;
             display: flex;
             position: relative;
             overflow: hidden;
             border: 1px solid var(--border);
-            justify-content: center;
-            align-items: center;
         }
 
-        /* Contenedor de la imagen respetando proporciones (Adiós efecto salchicha) */
+        /* La imagen llena toda la pantalla verticalmente sin deformarse de forma extraña */
         .preview-bg-media {
             position: absolute;
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain; /* ¡Mantiene la forma original de tu imagen sin deformarla ni recortarla! */
+            top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover; 
             z-index: 1;
             display: none;
         }
 
+        /* Degradado inteligente para que el texto resalte a full contra cualquier foto */
         .preview-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.4);
+            background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.2) 40%, rgba(0,0,0,0.85) 80%);
             z-index: 2;
             display: none;
         }
 
         .preview-content-box {
             position: absolute;
-            width: 90%;
-            padding: 14px;
+            width: 92%;
+            left: 4%;
+            padding: 16px;
             z-index: 3;
             display: flex;
             flex-direction: column;
             gap: 8px;
-            background: rgba(11, 15, 25, 0.85);
-            backdrop-filter: blur(4px);
-            border-radius: 10px;
-            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(8px);
+            border-radius: 12px;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
 
-        .pos-top { top: 16px; align-items: flex-start; text-align: left; }
-        .pos-center { top: 50%; transform: translateY(-50%); align-items: center; text-align: center; }
-        .pos-bottom { bottom: 16px; align-items: center; text-align: center; }
+        .pos-top { top: 16px; }
+        .pos-center { top: 50%; transform: translateY(-50%); }
+        .pos-bottom { bottom: 16px; }
 
         .preview-hook {
             font-size: 15px;
-            font-weight: 700;
-            line-height: 1.3;
+            font-weight: 800;
+            line-height: 1.35;
             color: #ffffff;
+            letter-spacing: -0.2px;
+        }
+
+        .preview-badge-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .preview-badge {
@@ -175,21 +182,17 @@
             font-weight: 700;
             text-transform: uppercase;
             padding: 3px 8px;
-            border-radius: 15px;
+            border-radius: 12px;
             letter-spacing: 1px;
             background: var(--primary);
             color: #0b0f19;
         }
 
         .preview-brand {
-            position: absolute;
-            bottom: 6px;
-            right: 10px;
-            font-size: 9px;
-            font-weight: 600;
-            opacity: 0.7;
-            z-index: 3;
-            color: #ffffff;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--primary);
+            letter-spacing: 0.5px;
         }
 
         .controls {
@@ -220,17 +223,17 @@
 <div class="app-container">
     <div class="header">
         <h1>Gesto Smart • Placas Pro</h1>
-        <p>Formato vertical óptimo para Instagram y TikTok.</p>
+        <p>Diseño vertical sin franjas y listo para redes.</p>
     </div>
 
     <div class="content-body">
         <div class="form-group">
             <label>Texto / Gancho Comercial</label>
-            <textarea id="script-input" placeholder="Escribe aquí tu gancho...">¿La agenda de papel? 😳 ! Y si pudieras tener una agenda en tu tablet o compu?</textarea>
+            <textarea id="script-input" placeholder="Escribe aquí tu gancho...">¿La agenda de papel? 😳 ! Y si pudieras tener una agenda en tu tablet o compu? Y ademas la caja y el stock?</textarea>
         </div>
 
         <div class="form-group">
-            <label>Posición del Texto</label>
+            <label>Posición del Bloque de Texto</label>
             <div class="position-grid">
                 <button class="pos-btn" data-pos="top">Arriba</button>
                 <button class="pos-btn" data-pos="center">Centro</button>
@@ -239,7 +242,7 @@
         </div>
 
         <div class="form-group">
-            <label>Fondo Base (Color o Imagen)</label>
+            <label>Fondo Base</label>
             <div class="templates-grid">
                 <div class="template-card" data-style="dark">Dark</div>
                 <div class="template-card" data-style="vibrant">Vibrante</div>
@@ -249,21 +252,23 @@
         </div>
 
         <div class="form-group" id="media-upload-group" style="display: flex;">
-            <label>Subir Imagen (Se adapta sin deformarse)</label>
+            <label>Subir Imagen (Llena toda la pantalla 9:16)</label>
             <input type="file" id="media-file-input" accept="image/*">
         </div>
 
         <div class="form-group">
-            <label>Vista Previa (Formato 9:16 Redes)</label>
+            <label>Vista Previa (Formato Historia / Reel)</label>
             <div id="preview-box" class="preview-container">
                 <img id="bg-image" class="preview-bg-media" alt="Fondo">
                 <div id="preview-overlay" class="preview-overlay" style="display: block;"></div>
 
                 <div id="content-box" class="preview-content-box pos-bottom">
-                    <span id="badge-text" class="preview-badge">Gesto Smart</span>
-                    <h2 id="preview-text" class="preview-hook">¿La agenda de papel? 😳 ! Y si pudieras tener una agenda en tu tablet o compu?</h2>
+                    <div class="preview-badge-container">
+                        <span class="preview-badge">Gesto Smart</span>
+                        <span class="preview-brand">gestosmart.app</span>
+                    </div>
+                    <h2 id="preview-text" class="preview-hook">¿La agenda de papel? 😳 ! Y si pudieras tener una agenda en tu tablet o compu? Y ademas la caja y el stock?</h2>
                 </div>
-                <div id="brand-text" class="preview-brand">gestosmart.app</div>
             </div>
         </div>
     </div>
@@ -278,7 +283,6 @@
     const scriptInput = document.getElementById('script-input');
     const previewText = document.getElementById('preview-text');
     const previewBox = document.getElementById('preview-box');
-    const badgeText = document.getElementById('badge-text');
     const contentBox = document.getElementById('content-box');
     const templateCards = document.querySelectorAll('.template-card');
     const posButtons = document.querySelectorAll('.pos-btn');
@@ -320,7 +324,7 @@
             if (currentMode === 'media') {
                 mediaUploadGroup.style.display = 'flex';
                 previewOverlay.style.display = 'block';
-                previewBox.style.background = '#0f172a';
+                previewBox.style.background = '#000';
             } else {
                 mediaUploadGroup.style.display = 'none';
                 bgImage.style.display = 'none';
@@ -328,7 +332,6 @@
 
                 const cfg = stylesConfig[currentMode];
                 previewBox.style.background = cfg.bg;
-                previewText.style.color = cfg.color;
             }
         });
     });
