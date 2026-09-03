@@ -113,22 +113,26 @@
             color: var(--text-muted);
         }
 
-        /* Vista Previa en Formato Reel/TikTok (9:16 estricto) */
+        /* Vista Previa en Formato Reel/TikTok estricto (9:16) con fondo prolijo */
         .preview-container {
             width: 100%;
-            aspect-ratio: 9 / 14;
-            background: #000;
+            aspect-ratio: 9 / 16;
+            background: #0f172a;
             border-radius: 10px;
             display: flex;
             position: relative;
             overflow: hidden;
             border: 1px solid var(--border);
+            justify-content: center;
+            align-items: center;
         }
 
+        /* Contenedor de la imagen respetando proporciones (Adiós efecto salchicha) */
         .preview-bg-media {
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            object-fit: cover; /* ¡Magia pura: estira y recorta cualquier imagen para que llene la pantalla sin deformarse! */
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain; /* ¡Mantiene la forma original de tu imagen sin deformarla ni recortarla! */
             z-index: 1;
             display: none;
         }
@@ -136,32 +140,34 @@
         .preview-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.55);
+            background: rgba(0, 0, 0, 0.4);
             z-index: 2;
             display: none;
         }
 
-        /* Contenedor dinámico de texto según la posición elegida */
         .preview-content-box {
             position: absolute;
-            width: 100%;
-            padding: 20px;
+            width: 90%;
+            padding: 14px;
             z-index: 3;
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            transition: all 0.2s ease;
+            gap: 8px;
+            background: rgba(11, 15, 25, 0.85);
+            backdrop-filter: blur(4px);
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
         }
-        /* Posiciones del texto */
-        .pos-top { top: 10px; align-items: flex-start; text-align: left; }
+
+        .pos-top { top: 16px; align-items: flex-start; text-align: left; }
         .pos-center { top: 50%; transform: translateY(-50%); align-items: center; text-align: center; }
-        .pos-bottom { bottom: 30px; align-items: center; text-align: center; }
+        .pos-bottom { bottom: 16px; align-items: center; text-align: center; }
 
         .preview-hook {
-            font-size: 17px;
-            font-weight: 800;
+            font-size: 15px;
+            font-weight: 700;
             line-height: 1.3;
-            text-shadow: 0 2px 6px rgba(0,0,0,0.9);
+            color: #ffffff;
         }
 
         .preview-badge {
@@ -171,17 +177,19 @@
             padding: 3px 8px;
             border-radius: 15px;
             letter-spacing: 1px;
+            background: var(--primary);
+            color: #0b0f19;
         }
 
         .preview-brand {
             position: absolute;
-            bottom: 8px;
-            right: 12px;
-            font-size: 10px;
+            bottom: 6px;
+            right: 10px;
+            font-size: 9px;
             font-weight: 600;
-            opacity: 0.8;
+            opacity: 0.7;
             z-index: 3;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+            color: #ffffff;
         }
 
         .controls {
@@ -211,8 +219,8 @@
 
 <div class="app-container">
     <div class="header">
-        <h1>Gesto Smart • Placas Express</h1>
-        <p>Cero vueltas: subí tu foto, acomodá el texto y descargá.</p>
+        <h1>Gesto Smart • Placas Pro</h1>
+        <p>Formato vertical óptimo para Instagram y TikTok.</p>
     </div>
 
     <div class="content-body">
@@ -222,7 +230,7 @@
         </div>
 
         <div class="form-group">
-            <label>Posición del Texto en la Placa</label>
+            <label>Posición del Texto</label>
             <div class="position-grid">
                 <button class="pos-btn" data-pos="top">Arriba</button>
                 <button class="pos-btn" data-pos="center">Centro</button>
@@ -236,26 +244,26 @@
                 <div class="template-card" data-style="dark">Dark</div>
                 <div class="template-card" data-style="vibrant">Vibrante</div>
                 <div class="template-card" data-style="minimal">Minimal</div>
-                <div class="template-card active" data-style="media">📁 Foto/Img</div>
+                <div class="template-card active" data-style="media">📁 Imagen</div>
             </div>
         </div>
 
         <div class="form-group" id="media-upload-group" style="display: flex;">
-            <label>Subir Imagen (Se adapta sola al formato)</label>
+            <label>Subir Imagen (Se adapta sin deformarse)</label>
             <input type="file" id="media-file-input" accept="image/*">
         </div>
 
         <div class="form-group">
-            <label>Vista Previa (Así saldrá en tu celu)</label>
-            <div id="preview-box" class="preview-container" style="background: #000;">
+            <label>Vista Previa (Formato 9:16 Redes)</label>
+            <div id="preview-box" class="preview-container">
                 <img id="bg-image" class="preview-bg-media" alt="Fondo">
                 <div id="preview-overlay" class="preview-overlay" style="display: block;"></div>
 
                 <div id="content-box" class="preview-content-box pos-bottom">
-                    <span id="badge-text" class="preview-badge" style="background: #38bdf8; color: #0b0f19;">Gesto Smart</span>
-                    <h2 id="preview-text" class="preview-hook" style="color: #ffffff;">¿La agenda de papel? 😳 ! Y si pudieras tener una agenda en tu tablet o compu?</h2>
+                    <span id="badge-text" class="preview-badge">Gesto Smart</span>
+                    <h2 id="preview-text" class="preview-hook">¿La agenda de papel? 😳 ! Y si pudieras tener una agenda en tu tablet o compu?</h2>
                 </div>
-                <div id="brand-text" class="preview-brand" style="color: #ffffff;">gestosmart.app</div>
+                <div id="brand-text" class="preview-brand">gestosmart.app</div>
             </div>
         </div>
     </div>
@@ -271,7 +279,6 @@
     const previewText = document.getElementById('preview-text');
     const previewBox = document.getElementById('preview-box');
     const badgeText = document.getElementById('badge-text');
-    const brandText = document.getElementById('brand-text');
     const contentBox = document.getElementById('content-box');
     const templateCards = document.querySelectorAll('.template-card');
     const posButtons = document.querySelectorAll('.pos-btn');
@@ -286,27 +293,24 @@
     let currentPos = 'bottom';
 
     const stylesConfig = {
-        dark: { bg: 'linear-gradient(135deg, #090d16 0%, #172033 100%)', color: '#f8fafc', badgeBg: '#38bdf8', badgeColor: '#0b0f19' },
-        vibrant: { bg: 'linear-gradient(135deg, #f43f5e 0%, #7c2d12 100%)', color: '#ffffff', badgeBg: '#fef08a', badgeColor: '#7c2d12' },
-        minimal: { bg: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)', color: '#0f172a', badgeBg: '#0f172a', badgeColor: '#f8fafc' }
+        dark: { bg: 'linear-gradient(135deg, #090d16 0%, #172033 100%)', color: '#f8fafc' },
+        vibrant: { bg: 'linear-gradient(135deg, #f43f5e 0%, #7c2d12 100%)', color: '#ffffff' },
+        minimal: { bg: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)', color: '#0f172a' }
     };
 
     scriptInput.addEventListener('input', (e) => {
         previewText.innerText = e.target.value || "Escribe tu texto...";
     });
 
-    // Control de posición del texto
     posButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             posButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             currentPos = btn.getAttribute('data-pos');
-            
             contentBox.className = `preview-content-box pos-${currentPos}`;
         });
     });
 
-    // Control de estilos de fondo
     templateCards.forEach(card => {
         card.addEventListener('click', () => {
             templateCards.forEach(c => c.classList.remove('active'));
@@ -316,8 +320,7 @@
             if (currentMode === 'media') {
                 mediaUploadGroup.style.display = 'flex';
                 previewOverlay.style.display = 'block';
-                previewText.style.color = '#ffffff';
-                previewBox.style.background = '#000';
+                previewBox.style.background = '#0f172a';
             } else {
                 mediaUploadGroup.style.display = 'none';
                 bgImage.style.display = 'none';
@@ -326,21 +329,16 @@
                 const cfg = stylesConfig[currentMode];
                 previewBox.style.background = cfg.bg;
                 previewText.style.color = cfg.color;
-                badgeText.style.background = cfg.badgeBg;
-                badgeText.style.color = cfg.badgeColor;
             }
         });
     });
 
-    // Auto-ajuste de cualquier imagen subida al formato vertical
     mediaFileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
         const fileURL = URL.createObjectURL(file);
         previewOverlay.style.display = 'block';
-        previewText.style.color = '#ffffff';
-
         bgImage.src = fileURL;
         bgImage.style.display = 'block';
     });
@@ -351,25 +349,22 @@
         setTimeout(() => copyTextBtn.innerText = "Copiar Copy", 2000);
     });
 
-    // Descarga blindada que graba el texto y la imagen juntos sin fallas
     downloadPlateBtn.addEventListener('click', async () => {
         downloadPlateBtn.innerText = "Armando placa...";
         downloadPlateBtn.disabled = true;
 
         try {
-            // Breve pausa para asegurar renderizado completo
-            await new Promise(r => setTimeout(r, 2005));
+            await new Promise(r => setTimeout(r, 1000));
 
             const canvas = await html2canvas(previewBox, {
                 useCORS: true,
-                scale: 3 // Ultra definición para redes
+                scale: 3
             });
 
             const imageURI = canvas.toDataURL("image/png");
-            
             const link = document.createElement('a');
             link.href = imageURI;
-            link.download = `gesto-smart-placa-${Date.now()}.png`;
+            link.download = `gesto-smart-story-${Date.now()}.png`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
