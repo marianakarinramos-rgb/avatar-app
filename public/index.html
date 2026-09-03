@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gesto Smart - Fábrica Express de Placas</title>
+    <title>Gesto Smart • Fábrica Express de Placas</title>
     <style>
         :root {
             --bg-color: #0b0f19;
             --surface: #1e293b;
             --surface-hover: #334155;
             --primary: #38bdf8;
-            --accent: #f43f5e;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
             --border: #334155;
@@ -60,19 +59,18 @@
         }
         textarea:focus { border-color: var(--primary); }
 
-        /* Selector de Estilos / Plantillas */
         .templates-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
         }
         .template-card {
             background: #0f172a;
             border: 2px solid var(--border);
             border-radius: 8px;
-            padding: 10px 6px;
+            padding: 8px 4px;
             text-align: center;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 600;
             cursor: pointer;
             color: var(--text-muted);
@@ -84,10 +82,19 @@
             background: rgba(56, 189, 248, 0.05);
         }
 
-        /* Vista Previa de la Placa (Formato vertical 9:16 simulado) */
+        input[type="file"] {
+            font-size: 12px;
+            padding: 8px;
+            background: #0f172a;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-muted);
+        }
+
+        /* Vista Previa en Formato Reel/TikTok (9:16) */
         .preview-container {
             width: 100%;
-            aspect-ratio: 9 / 12;
+            aspect-ratio: 9 / 13;
             background: #000;
             border-radius: 12px;
             display: flex;
@@ -99,11 +106,28 @@
             position: relative;
             overflow: hidden;
             border: 1px solid var(--border);
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        /* Fondo dinámico (Imagen o Video) */
+        .preview-bg-media {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover;
+            z-index: 1;
+            display: none;
+        }
+
+        /* Capa de oscurecimiento para que el texto resalte sobre fotos/videos */
+        .preview-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.65);
+            z-index: 2;
+            display: none;
         }
 
         .preview-content {
-            z-index: 2;
+            z-index: 3;
             display: flex;
             flex-direction: column;
             gap: 14px;
@@ -114,6 +138,7 @@
             font-weight: 800;
             line-height: 1.35;
             letter-spacing: -0.3px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
         }
 
         .preview-badge {
@@ -125,6 +150,7 @@
             border-radius: 20px;
             align-self: center;
             letter-spacing: 1px;
+            z-index: 3;
         }
 
         .preview-brand {
@@ -132,8 +158,10 @@
             bottom: 14px;
             font-size: 11px;
             font-weight: 600;
-            opacity: 0.7;
+            opacity: 0.8;
             letter-spacing: 0.5px;
+            z-index: 3;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.8);
         }
 
         .controls {
@@ -158,50 +186,58 @@
             text-align: center;
         }
         .btn:active { opacity: 0.8; }
-        .btn-secondary {
-            background: var(--surface-hover);
-            color: white;
-        }
+        .btn-secondary { background: var(--surface-hover); color: white; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
     <div class="header">
-        <h1>Gesto Smart • Placas Express</h1>
-        <p>Crea contenido de alto impacto visual sin editar videos.</p>
+        <h1>Gesto Smart • Placas & Videos</h1>
+        <p>Tu contenido en loop con texto de alto impacto.</p>
     </div>
 
     <div class="content-body">
         <div class="form-group">
-            <label>Gancho / Dolor del Cliente (Texto Principal)</label>
-            <textarea id="script-input" placeholder="¿Cansada de actualizar precios a mano y quedarte sin stock a medianoche?">¿Cansada de actualizar precios a mano y quedarte sin stock a medianoche?</textarea>
+            <label>Gancho / Dolor del Cliente</label>
+            <textarea id="script-input" placeholder="¿Cansada de actualizar precios a mano?">¿Cansada de actualizar precios a mano y quedarte sin stock?</textarea>
         </div>
 
         <div class="form-group">
-            <label>Elegir Estilo Visual</label>
+            <label>Fondo Base (Color o Archivo Multimedia)</label>
             <div class="templates-grid">
                 <div class="template-card active" data-style="dark">Dark Tech</div>
                 <div class="template-card" data-style="vibrant">Vibrante</div>
                 <div class="template-card" data-style="minimal">Minimal</div>
+                <div class="template-card" data-style="media">📁 Archivo</div>
             </div>
         </div>
 
+        <div class="form-group" id="media-upload-group" style="display: none;">
+            <label>Subir Video o Imagen de Fondo</label>
+            <input type="file" id="media-file-input" accept="image/*,video/*">
+        </div>
+
         <div class="form-group">
-            <label>Vista Previa en Vivo (Formato Reel/TikTok)</label>
-            <div id="preview-box" class="preview-container" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
+            <label>Vista Previa Interactiva (Reel / TikTok)</label>
+            <div id="preview-box" class="preview-container" style="background: linear-gradient(135deg, #090d16 0%, #172033 100%);">
+                <!-- Elementos dinámicos para foto/video de fondo -->
+                <img id="bg-image" class="preview-bg-media" alt="Fondo">
+                <video id="bg-video" class="preview-bg-media" autoplay muted loop playsinline></video>
+                <div id="preview-overlay" class="preview-overlay"></div>
+
+                <span id="badge-text" class="preview-badge" style="background: #38bdf8; color: #0b0f19;">Gesto Smart</span>
                 <div class="preview-content">
-                    <span id="badge-text" class="preview-badge" style="background: #38bdf8; color: #0b0f19;">Gesto Smart</span>
-                    <h2 id="preview-text" class="preview-hook">¿Cansada de actualizar precios a mano y quedarte sin stock a medianoche?</h2>
+                    <h2 id="preview-text" class="preview-hook" style="color: #f8fafc;">¿Cansada de actualizar precios a mano y quedarte sin stock?</h2>
                 </div>
-                <div id="brand-text" class="preview-brand">gestosmart.app</div>
+                <div id="brand-text" class="preview-brand" style="color: #94a3b8;">gestosmart.app</div>
             </div>
         </div>
     </div>
 
     <div class="controls">
         <button id="copy-text-btn" class="btn btn-secondary">Copiar Copy</button>
-        <button id="download-plate-btn" class="btn">📸 Guardar Placa</button>
+        <button id="download-plate-btn" class="btn">🚀 Guardar / Tip</button>
     </div>
 </div>
 
@@ -212,67 +248,84 @@
     const badgeText = document.getElementById('badge-text');
     const brandText = document.getElementById('brand-text');
     const templateCards = document.querySelectorAll('.template-card');
+    const mediaUploadGroup = document.getElementById('media-upload-group');
+    const mediaFileInput = document.getElementById('media-file-input');
+    const bgImage = document.getElementById('bg-image');
+    const bgVideo = document.getElementById('bg-video');
+    const previewOverlay = document.getElementById('preview-overlay');
     const copyTextBtn = document.getElementById('copy-text-btn');
     const downloadPlateBtn = document.getElementById('download-plate-btn');
 
-    let currentStyle = 'dark';
+    let currentMode = 'dark';
 
-    // Estilos predefinidos para las placas
     const stylesConfig = {
-        dark: {
-            bg: 'linear-gradient(135deg, #090d16 0%, #172033 100%)',
-            color: '#f8fafc',
-            badgeBg: '#38bdf8',
-            badgeColor: '#0b0f19',
-            brandColor: '#94a3b8'
-        },
-        vibrant: {
-            bg: 'linear-gradient(135deg, #f43f5e 0%, #7c2d12 100%)',
-            color: '#ffffff',
-            badgeBg: '#fef08a',
-            badgeColor: '#7c2d12',
-            brandColor: '#fed7aa'
-        },
-        minimal: {
-            bg: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-            color: '#0f172a',
-            badgeBg: '#0f172a',
-            badgeColor: '#f8fafc',
-            brandColor: '#64748b'
-        }
+        dark: { bg: 'linear-gradient(135deg, #090d16 0%, #172033 100%)', color: '#f8fafc', badgeBg: '#38bdf8', badgeColor: '#0b0f19', brandColor: '#94a3b8' },
+        vibrant: { bg: 'linear-gradient(135deg, #f43f5e 0%, #7c2d12 100%)', color: '#ffffff', badgeBg: '#fef08a', badgeColor: '#7c2d12', brandColor: '#fed7aa' },
+        minimal: { bg: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)', color: '#0f172a', badgeBg: '#0f172a', badgeColor: '#f8fafc', brandColor: '#64748b' }
     };
 
-    // Actualizar texto en tiempo real
     scriptInput.addEventListener('input', (e) => {
-        previewText.innerText = e.target.value || "Escribe tu texto arriba...";
+        previewText.innerText = e.target.value || "Escribe tu texto...";
     });
 
-    // Cambiar estilo visual
     templateCards.forEach(card => {
         card.addEventListener('click', () => {
             templateCards.forEach(c => c.classList.remove('active'));
             card.classList.add('active');
-            currentStyle = card.getAttribute('data-style');
-            
-            const cfg = stylesConfig[currentStyle];
-            previewBox.style.background = cfg.bg;
-            previewBox.style.color = cfg.color;
-            badgeText.style.background = cfg.badgeBg;
-            badgeText.style.color = cfg.badgeColor;
-            brandText.style.color = cfg.brandColor;
+            currentMode = card.getAttribute('data-style');
+
+            if (currentMode === 'media') {
+                mediaUploadGroup.style.display = 'flex';
+                bgImage.style.display = 'none';
+                bgVideo.style.display = 'none';
+                previewOverlay.style.display = 'block';
+                previewBox.style.background = '#000';
+            } else {
+                mediaUploadGroup.style.display = 'none';
+                bgImage.style.display = 'none';
+                bgVideo.style.display = 'none';
+                previewOverlay.style.display = 'none';
+
+                const cfg = stylesConfig[currentMode];
+                previewBox.style.background = cfg.bg;
+                previewText.style.color = cfg.color;
+                badgeText.style.background = cfg.badgeBg;
+                badgeText.style.color = cfg.badgeColor;
+                brandText.style.color = cfg.brandColor;
+            }
         });
     });
 
-    // Copiar texto para usar de descripción en redes
+    // Manejar subida de video o imagen propia para el fondo
+    mediaFileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const fileURL = URL.createObjectURL(file);
+        previewOverlay.style.display = 'block';
+        previewText.style.color = '#ffffff';
+        brandText.style.color = '#ffffff';
+
+        if (file.type.startsWith('video')) {
+            bgImage.style.display = 'none';
+            bgVideo.src = fileURL;
+            bgVideo.style.display = 'block';
+            bgVideo.play();
+        } else if (file.type.startsWith('image')) {
+            bgVideo.style.display = 'none';
+            bgImage.src = fileURL;
+            bgImage.style.display = 'block';
+        }
+    });
+
     copyTextBtn.addEventListener('click', () => {
         navigator.clipboard.writeText(scriptInput.value);
         copyTextBtn.innerText = "¡Copiado! ✅";
         setTimeout(() => copyTextBtn.innerText = "Copiar Copy", 2000);
     });
 
-    // Acción para guardar / descargar (Aviso intuitivo para captura en celular)
     downloadPlateBtn.addEventListener('click', () => {
-        alert("💡 Tip desde el celu: Hacé una captura de pantalla (screenshot) de la vista previa de arriba para recortar la placa perfecta y subirla de toque a tus historias o reels.");
+        alert("💡 Tip: Si subiste tu video corto de fondo, hacé una grabación de pantalla en tu celu de esta vista previa para obtener tu video en segundos listo para subir a TikTok.");
     });
 </script>
 </body>
