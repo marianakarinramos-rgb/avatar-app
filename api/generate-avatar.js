@@ -11,7 +11,7 @@ export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Método no permitido' });
 
     try {
-        if (!process.env.BLOB_READ_WRITE_TOKEN || !process.env.ELEVENLABS_API_KEY || !process.env.FAL_KEY) {
+        if (!process.env.BLOB_READ_WRITE_TOKEN || !process.env.FAL_KEY) {
             throw new Error("Faltan configurar variables de entorno en Vercel.");
         }
 
@@ -23,12 +23,12 @@ export default async function handler(req, res) {
             });
         });
 
-        if (!files || !files.frontPhoto) {
-            throw new Error("No llegó la foto frontal al servidor.");
+        if (!files || !files.frontPhoto || !files.audioSample) {
+            throw new Error("No llegó la foto frontal o el audio original al servidor.");
         }
 
         const frontPhotoFile = files.frontPhoto[0];
-        const textToSpeak = fields.textToSpeak ? fields.textToSpeak[0] : "Hola, este es mi avatar inteligente.";
+        const audioFile = files.audioSample[0];
         
         console.log("1. Subiendo foto a Vercel Blob...");
         const blobPhoto = await put(`avatars/front-${Date.now()}.jpg`, fs.readFileSync(frontPhotoFile.path), {
@@ -36,36 +36,13 @@ export default async function handler(req, res) {
             token: process.env.BLOB_READ_WRITE_TOKEN
         });
 
-        console.log("2. Generando audio con ElevenLabs...");
-        // Usamos una voz estándar de ElevenLabs (Rachel) para garantizar estabilidad en el MVP
-        const voiceId = "21m00Tcm4TlvDq8ikWAM"; 
-        const ttsResponse = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
-            method: 'POST',
-            headers: {
-                'xi-api-key': process.env.ELEVENLABS_API_KEY,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                text: textToSpeak,
-                model_id: "eleven_multilingual_v2",
-                voice_settings: { stability: 0.5, similarity_boost: 0.75 }
-            })
-        });
-        
-        if (!ttsResponse.ok) {
-            const ttsError = await ttsResponse.text();
-            throw new Error("Error en ElevenLabs TTS: " + ttsError);
-        }
-
-        const audioBuffer = Buffer.from(await ttsResponse.arrayBuffer());
-        
-        console.log("3. Subiendo audio a Vercel Blob...");
-        const blobAudio = await put(`avatars/speech-${Date.now()}.mp3`, audioBuffer, {
+        console.log("2. Subiendo audio original a Vercel Blob...");
+        const blobAudio = await put(`avatars/speech-${Date.now()}.webm`, fs.readFileSync(audioFile.path), {
             access: 'public',
             token: process.env.BLOB_READ_WRITE_TOKEN
         });
 
-        console.log("4. Llamando a Fal.ai para animación...");
+        console.log("3. Llamando a Fal.ai para animación labial...");
         const animationResponse = await fetch('https://fal.run/fal-ai/sync-lips', {
             method: 'POST',
             headers: {
