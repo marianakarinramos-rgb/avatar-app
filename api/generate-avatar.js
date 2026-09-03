@@ -1,10 +1,8 @@
-import { put } from "@vercel/blob";
-import { IncomingForm } from "formidable";
-import fs from "fs";
-
 export const config = {
     api: {
-        bodyParser: false, // Desactivado para permitir la subida de archivos pesados (foto y audio)
+        bodyParser: {
+            sizeLimit: '10mb',
+        },
     },
 };
 
@@ -14,36 +12,12 @@ export default async function handler(req, res) {
     }
 
     try {
-        // Parseamos el formulario multiparte que viene del frontend
-        const data = await new Promise((resolve, reject) => {
-            const form = new IncomingForm({ multiples: false });
-            form.parse(req, (err, fields, files) => {
-                if (err) reject(err);
-                resolve({ fields, files });
-            });
-        });
+        // Recibimos directamente las URLs que el frontend ya subió a Vercel Blob
+        const { frontUrl, audioUrl } = req.body;
 
-        const frontPhotoFile = data.files.frontPhoto?.[0];
-        const audioSampleFile = data.files.audioSample?.[0];
-
-        if (!frontPhotoFile || !audioSampleFile) {
-            return res.status(400).json({ error: "Faltan archivos requeridos (foto o audio)." });
+        if (!frontUrl || !audioUrl) {
+            return res.status(400).json({ error: "Faltan las URLs de los archivos." });
         }
-
-        // Subimos la foto frontal a Vercel Storage
-        const frontBuffer = fs.readFileSync(frontPhotoFile.filepath);
-        const frontBlob = await put(`captures/front-${Date.now()}.jpg`, frontBuffer, { 
-            access: 'public',
-            token: process.env.BLOB_READ_WRITE_TOKEN
-        });
-
-        // Subimos la muestra de voz a Vercel Storage
-        const audioBuffer = fs.readFileSync(audioSampleFile.filepath);
-        const audioExtension = audioSampleFile.originalFilename?.includes('mp4') ? 'mp4' : 'webm';
-        const audioBlob = await put(`captures/audio-${Date.now()}.${audioExtension}`, audioBuffer, { 
-            access: 'public',
-            token: process.env.BLOB_READ_WRITE_TOKEN
-        });
 
         // Disparador automático a Fal.ai con webhook asíncrono
         const falResponse = await fetch("https://queue.fal.run/fal-ai/sadtalker", {
@@ -53,8 +27,8 @@ export default async function handler(req, res) {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                source_image_url: frontBlob.url,
-                driven_audio_url: audioBlob.url,
+                source_image_url: frontUrl,
+                driven_audio_url: audioUrl,
                 still: true,
                 enhancer: "gfpgan",
                 webhookUrl: "https://avatar-app-beta-snowy.vercel.app/api/webhook"
@@ -66,7 +40,6 @@ export default async function handler(req, res) {
             throw new Error(`Error en Fal.ai: ${errorText}`);
         }
 
-        // Éxito instantáneo para el frontend, liberando el hilo de ejecución
         return res.status(200).json({ success: true, message: "Avatar en cola de renderizado automático" });
 
     } catch (error) {
