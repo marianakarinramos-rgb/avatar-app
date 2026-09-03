@@ -53,9 +53,9 @@
     <!-- Modal Configuración API -->
     <div id="configModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-slate-900 border border-slate-700 p-6 rounded-2xl w-full max-w-sm">
-            <h2 class="font-bold text-lg mb-2 text-white">Configuración Motor IA</h2>
-            <p class="text-xs text-slate-400 mb-4">Ingresa tu API Key de OpenRouter o Groq para habilitar el agente de diseño.</p>
-            <input type="password" id="apiKeyInput" placeholder="sk-or-v1-..." class="w-full bg-slate-800 border border-slate-700 p-3 rounded-lg text-sm text-white outline-none mb-4 focus:border-sky-500">
+            <h2 class="font-bold text-lg mb-2 text-white">Motor IA (Groq)</h2>
+            <p class="text-xs text-slate-400 mb-4">Ingresa tu API Key de Groq (console.groq.com) para habilitar el agente de diseño gratis.</p>
+            <input type="password" id="apiKeyInput" placeholder="gsk_..." class="w-full bg-slate-800 border border-slate-700 p-3 rounded-lg text-sm text-white outline-none mb-4 focus:border-sky-500">
             <div class="flex gap-2">
                 <button onclick="toggleConfig()" class="flex-1 bg-slate-700 p-3 rounded-lg font-bold text-sm">Cerrar</button>
                 <button onclick="saveApiKey()" class="flex-1 bg-sky-500 text-slate-900 p-3 rounded-lg font-bold text-sm">Guardar Key</button>
@@ -161,14 +161,14 @@
         canvas.renderAll();
     }
 
-    // El Agente de IA
+    // El Agente de IA conectado a Groq
     async function generateWithAI() {
         const prompt = document.getElementById('aiPrompt').value.trim();
         if (!prompt) return alert('Escribí las instrucciones para la IA.');
         if (!currentImageObj) return alert('Subí una imagen primero.');
         if (!apiKey) {
             toggleConfig();
-            return alert('Falta configurar tu API Key.');
+            return alert('Falta configurar tu API Key de Groq.');
         }
 
         const btn = document.getElementById('generateBtn');
@@ -183,21 +183,21 @@
         {
             "ganchoSuperior": "Texto corto y muy llamativo (max 8 palabras)",
             "llamadaInferior": "Texto de acción (max 12 palabras)",
-            "tipografia": "Bebas Neue", // Elige entre: Bebas Neue (Impacto urbano), Playfair Display (Elegante/Moda), Montserrat (Tech/Moderno), Cinzel (Lujo)
-            "colorTexto": "#FFFFFF", // Código HEX que contraste bien
-            "nivelOscurecimiento": 0.5 // Valor entre 0.0 y 0.8 para oscurecer la imagen y que resalte el texto
+            "tipografia": "Bebas Neue", // Elige entre: Bebas Neue, Playfair Display, Montserrat, Cinzel
+            "colorTexto": "#FFFFFF", // Código HEX
+            "nivelOscurecimiento": 0.5 // Valor entre 0.0 y 0.8 para oscurecer la imagen
         }`;
 
         try {
-            // Llamada a OpenRouter (o cambialo al endpoint de Groq si preferís)
-            const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            // Llamada a la API ultrarrápida de Groq
+            const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
                 method: "POST",
                 headers: {
                     "Authorization": `Bearer ${apiKey}`,
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    model: "meta-llama/llama-3.1-8b-instruct", // Modelo rápido y económico
+                    model: "llama-3.1-8b-instant",
                     messages: [
                         { role: "system", content: systemPrompt },
                         { role: "user", content: prompt }
@@ -206,6 +206,10 @@
                 })
             });
 
+            if (!response.ok) {
+                throw new Error('Error en la API. Verificá que la Key de Groq sea correcta.');
+            }
+
             const data = await response.json();
             const aiResult = JSON.parse(data.choices[0].message.content);
 
@@ -213,7 +217,7 @@
 
         } catch (error) {
             console.error(error);
-            alert("Error en la conexión con la IA. Revisá tu API Key.");
+            alert(error.message);
         } finally {
             btn.disabled = false;
             spinner.classList.add('hidden');
@@ -222,10 +226,9 @@
 
     // Renderizar la decisión de la IA en el Canvas
     function aplicarDisenoIA(config) {
-        // 1. Renderizar fondo con el nivel de oscuridad pedido por la IA
         renderBaseImage(config.nivelOscurecimiento || 0.4);
 
-        // 2. Crear Texto Superior
+        // Texto Superior (Editable tras generarse)
         const textTop = new fabric.Textbox(config.ganchoSuperior.toUpperCase(), {
             left: 540, top: 200,
             originX: 'center', originY: 'top',
@@ -238,17 +241,17 @@
             shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.8)', blur: 15, offsetX: 0, offsetY: 4 })
         });
 
-        // 3. Crear Texto Inferior
+        // Texto Inferior (Editable tras generarse)
         const textBottom = new fabric.Textbox(config.llamadaInferior, {
             left: 540, top: 1600,
             originX: 'center', originY: 'bottom',
             width: 900,
             fontSize: 55,
-            fontFamily: 'Montserrat', // Usamos Montserrat para legibilidad en CTA siempre
+            fontFamily: 'Montserrat', // Legibilidad en CTA
             fontWeight: 'normal',
             fill: '#ffffff',
             textAlign: 'center',
-            backgroundColor: 'rgba(0,0,0,0.6)', // Caja tipo IG para CTA
+            backgroundColor: 'rgba(0,0,0,0.6)',
             padding: 20,
             shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.5)', blur: 10 })
         });
