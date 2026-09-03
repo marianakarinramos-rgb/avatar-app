@@ -42,16 +42,16 @@ export default async function handler(req, res) {
             token: process.env.BLOB_READ_WRITE_TOKEN
         });
 
-        console.log("3. Llamando a Fal.ai para animación labial...");
-        const animationResponse = await fetch('https://fal.run/fal-ai/sync-lips', {
+        console.log("3. Llamando a Fal.ai (SadTalker) para animación labial...");
+        const animationResponse = await fetch('https://fal.run/fal-ai/sadtalker', {
             method: 'POST',
             headers: {
                 'Authorization': `Key ${process.env.FAL_KEY}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                image_url: blobPhoto.url,
-                audio_url: blobAudio.url
+                source_image_url: blobPhoto.url,
+                driven_audio_url: blobAudio.url
             })
         });
 
