@@ -20,7 +20,6 @@
 </head>
 <body class="flex flex-col min-h-screen">
 
-    <!-- Header & Config -->
     <header class="p-4 flex justify-between items-center border-b border-slate-800 bg-slate-900/50">
         <div>
             <h1 class="text-base font-black text-white tracking-tight">GESTO SMART <span class="text-sky-400">IA STUDIO</span></h1>
@@ -28,7 +27,6 @@
         <button onclick="toggleConfig()" class="text-slate-400 hover:text-white text-xl" title="Configurar API">⚙️</button>
     </header>
 
-    <!-- Modal Configuración API -->
     <div id="configModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-slate-900 border border-slate-700 p-6 rounded-2xl w-full max-w-sm">
             <h2 class="font-bold text-lg mb-2 text-white">Configuración del Motor IA</h2>
@@ -37,11 +35,11 @@
             <label class="block text-xs font-bold text-slate-400 mb-1">API Key de Groq</label>
             <input type="password" id="apiKeyInput" placeholder="gsk_..." class="w-full bg-slate-800 border border-slate-700 p-3 rounded-lg text-sm text-white outline-none mb-4 focus:border-sky-500">
             
-            <label class="block text-xs font-bold text-slate-400 mb-1">Modelo de IA (Elegir otro si uno falla)</label>
+            <label class="block text-xs font-bold text-slate-400 mb-1">Modelo de IA (Estables)</label>
             <select id="modelSelect" class="w-full bg-slate-800 border border-slate-700 p-3 rounded-lg text-sm text-white outline-none mb-6 focus:border-sky-500">
-                <option value="llama-3.1-70b-versatile">Llama 3.1 70B (Súper Estable)</option>
-                <option value="mixtral-8x7b-32768">Mixtral 8x7B (Rápido y Confiable)</option>
-                <option value="gemma2-9b-it">Gemma 2 9B (Respaldo)</option>
+                <option value="mixtral-8x7b-32768">Mixtral 8x7B (Súper Estable y Rápido)</option>
+                <option value="llama3-8b-8192">Llama 3 8B (Confiable)</option>
+                <option value="llama3-70b-8192">Llama 3 70B (Potente)</option>
             </select>
 
             <div class="flex gap-2">
@@ -82,8 +80,17 @@
     </div>
 
 <script>
+    // Limpieza de memoria por modelos dados de baja por Groq
+    const deprecatedModels = ['llama-3.1-70b-versatile', 'llama-3.1-8b-instant'];
+    let savedModel = localStorage.getItem('gesto_ai_model');
+    
+    if (!savedModel || deprecatedModels.includes(savedModel)) {
+        savedModel = 'mixtral-8x7b-32768'; // Forzamos Mixtral que nunca se cae
+        localStorage.setItem('gesto_ai_model', savedModel);
+    }
+
     let apiKey = localStorage.getItem('gesto_api_key') || '';
-    let selectedModel = localStorage.getItem('gesto_ai_model') || 'llama-3.1-70b-versatile';
+    let selectedModel = savedModel;
     
     function toggleConfig() {
         const modal = document.getElementById('configModal');
@@ -172,8 +179,7 @@
             "nivelOscurecimiento": 0.5 
         }`;
 
-        // Obtener el modelo directamente del selector o de la memoria
-        const currentModel = localStorage.getItem('gesto_ai_model') || 'llama-3.1-70b-versatile';
+        const currentModel = localStorage.getItem('gesto_ai_model') || 'mixtral-8x7b-32768';
 
         try {
             const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
