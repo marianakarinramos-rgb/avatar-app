@@ -14,12 +14,15 @@ export default async function handler(req, res) {
     }
 
     try {
-        let body = req.body;
-        if (typeof body === 'string') {
-            try { body = JSON.parse(body); } catch (e) { body = {}; }
+        // Blindaje total contra cuerpos vacíos o indefinidos
+        let body = {};
+        if (req.body) {
+            body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
         }
 
-        const { frontBase64, audioBase64, audioExtension } = body;
+        const frontBase64 = body.frontBase64;
+        const audioBase64 = body.audioBase64;
+        const audioExtension = body.audioExtension;
 
         if (!frontBase64 || !audioBase64) {
             return res.status(400).json({ error: "Faltan los datos de los archivos en la petición." });
