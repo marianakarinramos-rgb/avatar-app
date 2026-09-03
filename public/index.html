@@ -94,7 +94,6 @@
             border-color: var(--primary);
         }
 
-        /* Vista Previa Pantalla Completa 9:16 nativa para Fotos y Videos */
         .preview-container {
             width: 100%;
             aspect-ratio: 9 / 16;
@@ -333,9 +332,14 @@
         try {
             await new Promise(r => setTimeout(r, 800));
 
+            // Forzamos el ancho y alto exactos en alta definición para que la exportación sea idéntica a la vista previa
             const canvas = await html2canvas(previewBox, {
                 useCORS: true,
-                scale: 3
+                scale: 3,
+                width: previewBox.offsetWidth,
+                height: previewBox.offsetHeight,
+                windowWidth: document.documentElement.clientWidth,
+                windowHeight: document.documentElement.clientHeight
             });
 
             const imageURI = canvas.toDataURL("image/png");
