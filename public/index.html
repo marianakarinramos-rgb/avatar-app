@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gesto Smart • Fábrica Express de Placas</title>
+    <!-- Librería para transformar el cuadro en archivo descargable -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
             --bg-color: #0b0f19;
@@ -108,7 +110,6 @@
             border: 1px solid var(--border);
         }
 
-        /* Fondo dinámico (Imagen o Video) */
         .preview-bg-media {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -117,7 +118,6 @@
             display: none;
         }
 
-        /* Capa de oscurecimiento para que el texto resalte sobre fotos/videos */
         .preview-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -194,50 +194,49 @@
 <div class="app-container">
     <div class="header">
         <h1>Gesto Smart • Placas & Videos</h1>
-        <p>Tu contenido en loop con texto de alto impacto.</p>
+        <p>Tu contenido listo para descargar en segundos.</p>
     </div>
 
     <div class="content-body">
         <div class="form-group">
             <label>Gancho / Dolor del Cliente</label>
-            <textarea id="script-input" placeholder="¿Cansada de actualizar precios a mano?">¿Cansada de actualizar precios a mano y quedarte sin stock?</textarea>
+            <textarea id="script-input" placeholder="¿Cansada de actualizar precios a mano?">¿La agenda de papel? 😳 ! Y si pudieras tener una agenda en tu tablet o compu?</textarea>
         </div>
 
         <div class="form-group">
             <label>Fondo Base (Color o Archivo Multimedia)</label>
             <div class="templates-grid">
-                <div class="template-card active" data-style="dark">Dark Tech</div>
+                <div class="template-card" data-style="dark">Dark Tech</div>
                 <div class="template-card" data-style="vibrant">Vibrante</div>
                 <div class="template-card" data-style="minimal">Minimal</div>
-                <div class="template-card" data-style="media">📁 Archivo</div>
+                <div class="template-card active" data-style="media">📁 Archivo</div>
             </div>
         </div>
 
-        <div class="form-group" id="media-upload-group" style="display: none;">
+        <div class="form-group" id="media-upload-group" style="display: flex;">
             <label>Subir Video o Imagen de Fondo</label>
             <input type="file" id="media-file-input" accept="image/*,video/*">
         </div>
 
         <div class="form-group">
             <label>Vista Previa Interactiva (Reel / TikTok)</label>
-            <div id="preview-box" class="preview-container" style="background: linear-gradient(135deg, #090d16 0%, #172033 100%);">
-                <!-- Elementos dinámicos para foto/video de fondo -->
+            <div id="preview-box" class="preview-container" style="background: #000;">
                 <img id="bg-image" class="preview-bg-media" alt="Fondo">
                 <video id="bg-video" class="preview-bg-media" autoplay muted loop playsinline></video>
-                <div id="preview-overlay" class="preview-overlay"></div>
+                <div id="preview-overlay" class="preview-overlay" style="display: block;"></div>
 
                 <span id="badge-text" class="preview-badge" style="background: #38bdf8; color: #0b0f19;">Gesto Smart</span>
                 <div class="preview-content">
-                    <h2 id="preview-text" class="preview-hook" style="color: #f8fafc;">¿Cansada de actualizar precios a mano y quedarte sin stock?</h2>
+                    <h2 id="preview-text" class="preview-hook" style="color: #ffffff;">¿La agenda de papel? 😳 ! Y si pudieras tener una agenda en tu tablet o compu?</h2>
                 </div>
-                <div id="brand-text" class="preview-brand" style="color: #94a3b8;">gestosmart.app</div>
+                <div id="brand-text" class="preview-brand" style="color: #ffffff;">gestosmart.app</div>
             </div>
         </div>
     </div>
 
     <div class="controls">
         <button id="copy-text-btn" class="btn btn-secondary">Copiar Copy</button>
-        <button id="download-plate-btn" class="btn">🚀 Guardar / Tip</button>
+        <button id="download-plate-btn" class="btn">📥 Descargar Placa</button>
     </div>
 </div>
 
@@ -256,7 +255,7 @@
     const copyTextBtn = document.getElementById('copy-text-btn');
     const downloadPlateBtn = document.getElementById('download-plate-btn');
 
-    let currentMode = 'dark';
+    let currentMode = 'media';
 
     const stylesConfig = {
         dark: { bg: 'linear-gradient(135deg, #090d16 0%, #172033 100%)', color: '#f8fafc', badgeBg: '#38bdf8', badgeColor: '#0b0f19', brandColor: '#94a3b8' },
@@ -276,9 +275,9 @@
 
             if (currentMode === 'media') {
                 mediaUploadGroup.style.display = 'flex';
-                bgImage.style.display = 'none';
-                bgVideo.style.display = 'none';
                 previewOverlay.style.display = 'block';
+                previewText.style.color = '#ffffff';
+                brandText.style.color = '#ffffff';
                 previewBox.style.background = '#000';
             } else {
                 mediaUploadGroup.style.display = 'none';
@@ -296,7 +295,6 @@
         });
     });
 
-    // Manejar subida de video o imagen propia para el fondo
     mediaFileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -324,8 +322,38 @@
         setTimeout(() => copyTextBtn.innerText = "Copiar Copy", 2000);
     });
 
-    downloadPlateBtn.addEventListener('click', () => {
-        alert("💡 Tip: Si subiste tu video corto de fondo, hacé una grabación de pantalla en tu celu de esta vista previa para obtener tu video en segundos listo para subir a TikTok.");
+    // Acción real de descarga de la placa en alta calidad
+    downloadPlateBtn.addEventListener('click', async () => {
+        downloadPlateBtn.innerText = "Generando imagen...";
+        downloadPlateBtn.disabled = true;
+
+        try {
+            // Ocultamos temporalmente los bordes o elementos si es necesario y tomamos la captura
+            const canvas = await html2canvas(previewBox, {
+                useCORS: true,
+                scale: 2 // Alta definición
+            });
+
+            const imageURI = canvas.toDataURL("image/png");
+            
+            // Creamos un link invisible para forzar la descarga en el celular o PC
+            const link = document.createElement('a');
+            link.href = imageURI;
+            link.download = `gesto-smart-placa-${Date.now()}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            downloadPlateBtn.innerText = "¡Descargado! 📥";
+        } catch (error) {
+            alert("Error al descargar: " + error.message);
+            downloadPlateBtn.innerText = "📥 Descargar Placa";
+        } finally {
+            setTimeout(() => {
+                downloadPlateBtn.innerText = "📥 Descargar Placa";
+                downloadPlateBtn.disabled = false;
+            }, 2500);
+        }
     });
 </script>
 </body>
