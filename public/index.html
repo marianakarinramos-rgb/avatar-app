@@ -20,6 +20,7 @@
 </head>
 <body class="flex flex-col min-h-screen">
 
+    <!-- Header & Config -->
     <header class="p-4 flex justify-between items-center border-b border-slate-800 bg-slate-900/50">
         <div>
             <h1 class="text-base font-black text-white tracking-tight">GESTO SMART <span class="text-sky-400">IA STUDIO</span></h1>
@@ -27,6 +28,7 @@
         <button onclick="toggleConfig()" class="text-slate-400 hover:text-white text-xl" title="Configurar API">⚙️</button>
     </header>
 
+    <!-- Modal Configuración API -->
     <div id="configModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-slate-900 border border-slate-700 p-6 rounded-2xl w-full max-w-sm">
             <h2 class="font-bold text-lg mb-2 text-white">Motor IA (Groq)</h2>
@@ -47,7 +49,7 @@
                 <input type="file" id="imageLoader" accept="image/*" class="hidden">
             </label>
 
-            <textarea id="aiPrompt" placeholder="Instrucciones para el Copywriter IA: Ej. 'Subí una foto de mi sistema. Creá un copy agresivo para venderle a peluquerías. Oscurecé la foto para que resalte.'" class="w-full h-24 bg-slate-950 border border-slate-700 p-3 rounded-xl text-sm text-white outline-none resize-none focus:border-sky-500"></textarea>
+            <textarea id="aiPrompt" placeholder="Ej: Hacé una placa para promocionar mi app en una peluquería. Que el texto venda ahorro de tiempo. Oscurecé un poco el fondo." class="w-full h-24 bg-slate-950 border border-slate-700 p-3 rounded-xl text-sm text-white outline-none resize-none focus:border-sky-500"></textarea>
             
             <button id="generateBtn" onclick="generateWithAI()" class="w-full mt-3 bg-gradient-to-r from-sky-500 to-indigo-500 text-white font-bold p-3 rounded-xl shadow-lg shadow-sky-500/20 flex justify-center items-center gap-2">
                 <span id="btnText">✨ 2. Redactar y Diseñar (IA)</span>
@@ -164,7 +166,7 @@
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    model: "llama-3.1-8b-instant",
+                    model: "llama3-8b-8192", // <-- ACÁ ESTÁ EL ARREGLO: Modelo estable universal de Groq
                     messages: [
                         { role: "system", content: systemPrompt },
                         { role: "user", content: prompt }
@@ -180,7 +182,6 @@
 
             const data = await response.json();
             
-            // Validar que la respuesta contenga el JSON esperado
             let aiResult;
             try {
                 aiResult = JSON.parse(data.choices[0].message.content);
