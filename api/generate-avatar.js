@@ -1,50 +1,21 @@
-import { put } from "@vercel/blob";
-
-export const config = {
-    api: {
-        bodyParser: {
-            sizeLimit: '10mb',
-        },
-    },
-};
-
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method Not Allowed' });
     }
 
     try {
-        // Blindaje total contra cuerpos vacíos o indefinidos
         let body = {};
         if (req.body) {
             body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
         }
 
-        const frontBase64 = body.frontBase64;
-        const audioBase64 = body.audioBase64;
-        const audioExtension = body.audioExtension;
+        const { frontUrl, audioUrl } = body;
 
-        if (!frontBase64 || !audioBase64) {
-            return res.status(400).json({ error: "Faltan los datos de los archivos en la petición." });
+        if (!frontUrl || !audioUrl) {
+            return res.status(400).json({ error: "Faltan las URLs de los archivos en la petición." });
         }
 
-        // 1. Subimos la foto a Vercel Blob desde el servidor
-        const frontBuffer = Buffer.from(frontBase64.replace(/^data:image\/\w+;base64,/, ""), 'base64');
-        const frontBlob = await put(`captures/front-${Date.now()}.jpg`, frontBuffer, { 
-            access: 'public',
-            token: process.env.BLOB_READ_WRITE_TOKEN
-        });
-
-        // 2. Subimos el audio a Vercel Blob desde el servidor
-        const base64Data = audioBase64.includes(',') ? audioBase64.split(',')[1] : audioBase64;
-        const audioBuffer = Buffer.from(base64Data, 'base64');
-        const ext = audioExtension || 'webm';
-        const audioBlob = await put(`captures/audio-${Date.now()}.${ext}`, audioBuffer, { 
-            access: 'public',
-            token: process.env.BLOB_READ_WRITE_TOKEN
-        });
-
-        // 3. Disparador automático a Fal.ai con webhook asíncrono
+        // Disparador automático a Fal.ai con webhook asíncrono
         const falResponse = await fetch("https://queue.fal.run/fal-ai/sadtalker", {
             method: "POST",
             headers: {
@@ -52,8 +23,8 @@ export default async function handler(req, res) {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                source_image_url: frontBlob.url,
-                driven_audio_url: audioBlob.url,
+                source_image_url: frontUrl,
+                driven_audio_url: audioUrl,
                 still: true,
                 enhancer: "gfpgan",
                 webhookUrl: "https://avatar-app-beta-snowy.vercel.app/api/webhook"
