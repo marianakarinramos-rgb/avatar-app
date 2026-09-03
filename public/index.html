@@ -94,7 +94,7 @@
             border-color: var(--primary);
         }
 
-        /* Vista previa 9:16 estricta */
+        /* Contenedor 9:16 profesional con efecto blur automático */
         .preview-container {
             width: 100%;
             aspect-ratio: 9 / 16;
@@ -108,27 +108,50 @@
             align-items: center;
         }
 
-        .preview-bg-media {
+        /* Fondo difuminado automático para llenar el espacio sin deformar nada */
+        .preview-bg-blur {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             object-fit: cover;
+            filter: blur(16px) brightness(0.5);
+            transform: scale(1.1);
             z-index: 1;
+            display: none;
+        }
+
+        /* Imagen principal intacta y centrada */
+        .preview-main-img {
+            position: relative;
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            z-index: 2;
+            display: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+
+        /* Video de fondo si se sube un video */
+        .preview-bg-video {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover;
+            z-index: 2;
             display: none;
         }
 
         .preview-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.3);
-            z-index: 2;
+            background: rgba(0, 0, 0, 0.2);
+            z-index: 3;
         }
 
-        /* Cajas de texto independientes (Arriba y Abajo) */
+        /* Cajas de texto independientes */
         .preview-text-box {
             position: absolute;
             width: 90%;
             left: 5%;
-            z-index: 3;
+            z-index: 4;
             text-align: center;
             padding: 10px 14px;
             border-radius: 8px;
@@ -139,8 +162,8 @@
         .box-bottom { bottom: 12px; }
 
         .bg-box-on {
-            background: rgba(11, 15, 25, 0.85);
-            backdrop-filter: blur(4px);
+            background: rgba(11, 15, 25, 0.88);
+            backdrop-filter: blur(6px);
             border: 1px solid rgba(56, 189, 248, 0.3);
             box-shadow: 0 4px 12px rgba(0,0,0,0.6);
         }
@@ -183,7 +206,7 @@
 <div class="app-container">
     <div class="header">
         <h1>Gesto Smart • Editor Profesional</h1>
-        <p>Texto arriba, texto abajo y control total.</p>
+        <p>Tus imágenes entran enteras con fondo difuminado pro.</p>
     </div>
 
     <div class="content-body">
@@ -224,15 +247,17 @@
         </div>
 
         <div class="form-group">
-            <label>Subir Imagen o Video (Ideal 1080x1920)</label>
+            <label>Subir Imagen o Video (Cualquier medida)</label>
             <input type="file" id="media-file-input" accept="image/*,video/*">
         </div>
 
         <div class="form-group">
             <label>Vista Previa Interactiva</label>
             <div id="preview-box" class="preview-container">
-                <img id="bg-image" class="preview-bg-media" alt="Fondo">
-                <video id="bg-video" class="preview-bg-media" autoplay muted loop playsinline></video>
+                <!-- Efecto fondo difuminado automático anti-deformación -->
+                <img id="bg-blur-img" class="preview-bg-blur" alt="Blur Background">
+                <img id="main-img" class="preview-main-img" alt="Main Image">
+                <video id="bg-video" class="preview-bg-video" autoplay muted loop playsinline></video>
                 <div class="preview-overlay"></div>
                 
                 <!-- Bloque Superior -->
@@ -265,7 +290,8 @@
     const toggleTopBg = document.getElementById('toggle-top-bg');
     const toggleBottomBg = document.getElementById('toggle-bottom-bg');
     const mediaFileInput = document.getElementById('media-file-input');
-    const bgImage = document.getElementById('bg-image');
+    const bgBlurImg = document.getElementById('bg-blur-img');
+    const mainImg = document.getElementById('main-img');
     const bgVideo = document.getElementById('bg-video');
     const previewBox = document.getElementById('preview-box');
     const downloadPlateBtn = document.getElementById('download-plate-btn');
@@ -304,15 +330,19 @@
         const file = e.target.files[0];
         if (!file) return;
         const fileURL = URL.createObjectURL(file);
+
         if (file.type.startsWith('video')) {
-            bgImage.style.display = 'none';
+            bgBlurImg.style.display = 'none';
+            mainImg.style.display = 'none';
             bgVideo.src = fileURL;
             bgVideo.style.display = 'block';
             bgVideo.play();
         } else {
             bgVideo.style.display = 'none';
-            bgImage.src = fileURL;
-            bgImage.style.display = 'block';
+            bgBlurImg.src = fileURL;
+            bgBlurImg.style.display = 'block';
+            mainImg.src = fileURL;
+            mainImg.style.display = 'block';
         }
     });
 
