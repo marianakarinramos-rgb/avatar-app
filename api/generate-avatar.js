@@ -1,22 +1,20 @@
-export const config = {
-    api: {
-        bodyParser: {
-            sizeLimit: '10mb',
-        },
-    },
-};
-
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method Not Allowed' });
     }
 
     try {
-        // Recibimos directamente las URLs que el frontend ya subió a Vercel Blob
-        const { frontUrl, audioUrl } = req.body;
+        // Blindaje contra cuerpos de petición vacíos o sin parsear
+        let body = req.body;
+        if (typeof body === 'string') {
+            try { body = JSON.parse(body); } catch (e) { body = {}; }
+        }
+        
+        const frontUrl = body?.frontUrl;
+        const audioUrl = body?.audioUrl;
 
         if (!frontUrl || !audioUrl) {
-            return res.status(400).json({ error: "Faltan las URLs de los archivos." });
+            return res.status(400).json({ error: "Faltan las URLs de los archivos en la petición." });
         }
 
         // Disparador automático a Fal.ai con webhook asíncrono
