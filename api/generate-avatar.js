@@ -2,7 +2,9 @@ import { put } from "@vercel/blob";
 
 export const config = {
     api: {
-        bodyParser: false,
+        bodyParser: {
+            sizeLimit: '10mb',
+        },
     },
 };
 
@@ -12,27 +14,34 @@ export default async function handler(req, res) {
     }
 
     try {
-        const formData = await req.formData();
-        const frontPhotoFile = formData.get('frontPhoto');
-        const audioSampleFile = formData.get('audioSample');
-
-        if (!frontPhotoFile || !audioSampleFile) {
-            return res.status(400).json({ error: "Faltan archivos requeridos en el formulario." });
+        let body = req.body;
+        if (typeof body === 'string') {
+            try { body = JSON.parse(body); } catch (e) { body = {}; }
         }
 
-        const frontBuffer = Buffer.from(await frontPhotoFile.arrayBuffer());
+        const { frontBase64, audioBase64, audioExtension } = body;
+
+        if (!frontBase64 || !audioBase64) {
+            return res.status(400).json({ error: "Faltan los datos de los archivos en la petición." });
+        }
+
+        // Subimos la foto a Vercel Blob
+        const frontBuffer = Buffer.from(frontBase64.replace(/^data:image\/\w+;base64,/, ""), 'base64');
         const frontBlob = await put(`captures/front-${Date.now()}.jpg`, frontBuffer, { 
             access: 'public',
             token: process.env.BLOB_READ_WRITE_TOKEN
         });
 
-        const audioBuffer = Buffer.from(await audioSampleFile.arrayBuffer());
-        const ext = audioSampleFile.name?.includes('mp4') ? 'mp4' : 'webm';
+        // Subimos el audio a Vercel Blob
+        const base64Data = audioBase64.includes(',') ? audioBase64.split(',')[1] : audioBase64;
+        const audioBuffer = Buffer.from(base64Data, 'base64');
+        const ext = audioExtension || 'webm';
         const audioBlob = await put(`captures/audio-${Date.now()}.${ext}`, audioBuffer, { 
             access: 'public',
             token: process.env.BLOB_READ_WRITE_TOKEN
         });
 
+        // Disparador automático a Fal.ai con webhook asíncrono
         const falResponse = await fetch("https://queue.fal.run/fal-ai/sadtalker", {
             method: "POST",
             headers: {
