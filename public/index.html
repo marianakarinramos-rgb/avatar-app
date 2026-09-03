@@ -199,7 +199,6 @@
         audioSample: null
     };
 
-    // Al inicio SOLO pedimos video para no despertar el micrófono prematuramente
     async function startCamera() {
         try {
             videoStream = await navigator.mediaDevices.getUserMedia({
@@ -246,7 +245,6 @@
             document.getElementById('dot-2').classList.remove('active');
             document.getElementById('dot-3').classList.add('active');
             
-            // Pedimos el audio EXACTAMENTE antes de grabar, para que el OS no lo bloquee
             try {
                 audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 stepDesc.innerText = "Lee el texto en pantalla con tu voz natural.";
@@ -257,14 +255,13 @@
                 stepDesc.innerText = "Error de micrófono.";
                 actionBtn.innerText = "Reintentar";
                 actionBtn.disabled = false;
-                currentStep = 2; // Volver atrás para reintentar
+                currentStep = 2; 
             }
             
         } else if (currentStep === 3) {
             currentStep = 4;
             audioChunks = [];
             
-            // Dejamos que el navegador decida su formato nativo favorito (evita corrupción en iOS/Android)
             mediaRecorder = new MediaRecorder(audioStream);
             
             mediaRecorder.ondataavailable = e => {
@@ -274,16 +271,15 @@
             };
             
             mediaRecorder.onstop = async () => {
-                // Si por algún motivo falló la recolección, avisamos
-                if (audioChunks.length === 0) {
-                    alert("Error: El navegador no capturó audio. Intenta de nuevo.");
+                const mime = mediaRecorder.mimeType || 'audio/webm';
+                userAssets.audioSample = new Blob(audioChunks, { type: mime });
+                
+                // VALIDACIÓN ESTRICTA: Impedimos subir si pesa menos de 10KB (Silencio o archivo roto)
+                if (userAssets.audioSample.size < 10000) {
+                    alert("ERROR: El hardware no capturó audio (0 bytes). Verifica que no estés usando una cámara/micrófono virtual de otro dispositivo.");
                     window.location.reload();
                     return;
                 }
-
-                // Generamos el blob usando el formato nativo exacto que eligió el navegador
-                const mime = mediaRecorder.mimeType || 'audio/webm';
-                userAssets.audioSample = new Blob(audioChunks, { type: mime });
                 
                 stepTitle.innerText = "¡Subiendo Assets!";
                 stepDesc.innerText = "Preparando datos en la nube...";
@@ -299,7 +295,6 @@
                     const formData = new FormData();
                     formData.append('frontPhoto', frontBlob, 'front.jpg');
                     
-                    // Asignamos extensión según el mime real
                     const extension = mime.includes('mp4') ? 'mp4' : mime.includes('ogg') ? 'ogg' : 'webm';
                     formData.append('audioSample', userAssets.audioSample, `voice.${extension}`);
 
@@ -316,7 +311,6 @@
                         video.style.display = 'none';
                         successScreen.style.display = 'flex';
                         
-                        // Apagamos hardware
                         if (videoStream) videoStream.getTracks().forEach(track => track.stop());
                         if (audioStream) audioStream.getTracks().forEach(track => track.stop());
                     } else {
@@ -332,7 +326,6 @@
                 }
             };
 
-            // CRÍTICO: Forzamos time-slicing cada 500ms para que el navegador móvil no se trague el archivo
             mediaRecorder.start(500);
             
             actionBtn.innerText = "Grabando... (Espera)";
