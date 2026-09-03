@@ -3,229 +3,276 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador de Contenido - IA Smart</title>
+    <title>Gesto Smart - Fábrica Express de Placas</title>
     <style>
         :root {
-            --bg-color: #f7f7f8;
-            --primary: #101828;
-            --accent: #007aff;
-            --surface: #ffffff;
-            --border: #eaecf0;
+            --bg-color: #0b0f19;
+            --surface: #1e293b;
+            --surface-hover: #334155;
+            --primary: #38bdf8;
+            --accent: #f43f5e;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { background-color: var(--bg-color); color: var(--primary); display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        body { background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 12px; }
         
         .app-container {
             background: var(--surface);
             width: 100%;
-            max-width: 480px;
-            height: 100vh;
-            max-height: 850px;
+            max-width: 440px;
+            border-radius: 20px;
             display: flex;
             flex-direction: column;
-            position: relative;
             overflow: hidden;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 1px solid var(--border);
         }
 
-        .header { padding: 20px; text-align: center; border-bottom: 1px solid var(--border); }
-        .header h1 { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
-        .header p { font-size: 13px; color: #667085; }
+        .header { padding: 20px; text-align: center; border-bottom: 1px solid var(--border); background: #0f172a; }
+        .header h1 { font-size: 17px; font-weight: 700; color: var(--primary); margin-bottom: 4px; }
+        .header p { font-size: 12px; color: var(--text-muted); }
 
         .content-body {
-            flex: 1;
-            padding: 24px;
+            padding: 20px;
             display: flex;
             flex-direction: column;
             gap: 16px;
+            max-height: 75vh;
             overflow-y: auto;
         }
 
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        label { font-size: 14px; font-weight: 600; color: var(--primary); }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        label { font-size: 13px; font-weight: 600; color: var(--text-muted); }
 
         textarea {
             width: 100%;
-            height: 120px;
+            height: 90px;
             padding: 12px;
             border: 1px solid var(--border);
-            border-radius: 8px;
+            border-radius: 10px;
             font-size: 14px;
+            background: #0f172a;
+            color: white;
             resize: none;
             outline: none;
         }
-        textarea:focus { border-color: var(--accent); }
+        textarea:focus { border-color: var(--primary); }
 
-        select, input[type="file"] {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid var(--border);
+        /* Selector de Estilos / Plantillas */
+        .templates-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        .template-card {
+            background: #0f172a;
+            border: 2px solid var(--border);
             border-radius: 8px;
-            font-size: 14px;
-            background: white;
-            outline: none;
+            padding: 10px 6px;
+            text-align: center;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: all 0.2s;
+        }
+        .template-card.active {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(56, 189, 248, 0.05);
+        }
+
+        /* Vista Previa de la Placa (Formato vertical 9:16 simulado) */
+        .preview-container {
+            width: 100%;
+            aspect-ratio: 9 / 12;
+            background: #000;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        .preview-content {
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .preview-hook {
+            font-size: 18px;
+            font-weight: 800;
+            line-height: 1.35;
+            letter-spacing: -0.3px;
+        }
+
+        .preview-badge {
+            display: inline-block;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 4px 10px;
+            border-radius: 20px;
+            align-self: center;
+            letter-spacing: 1px;
+        }
+
+        .preview-brand {
+            position: absolute;
+            bottom: 14px;
+            font-size: 11px;
+            font-weight: 600;
+            opacity: 0.7;
+            letter-spacing: 0.5px;
         }
 
         .controls {
-            padding: 20px;
-            background: var(--surface);
+            padding: 16px 20px;
+            background: #0f172a;
             border-top: 1px solid var(--border);
+            display: flex;
+            gap: 10px;
         }
 
         .btn {
             background: var(--primary);
-            color: white;
+            color: #0b0f19;
             border: none;
-            padding: 16px;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
             cursor: pointer;
-            width: 100%;
+            flex: 1;
             transition: opacity 0.2s;
-        }
-        .btn:disabled { background: #98a2b3; cursor: not-allowed; }
-        .btn:active:not(:disabled) { opacity: 0.8; }
-
-        .success-screen {
-            display: none;
             text-align: center;
-            padding: 40px 24px;
-            color: white;
-            background: var(--primary);
-            width: 100%;
-            height: 100%;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            gap: 16px;
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 10;
         }
-        .success-screen h2 { font-size: 24px; }
-        .success-screen p { font-size: 15px; color: #eaecf0; line-height: 1.5; }
+        .btn:active { opacity: 0.8; }
+        .btn-secondary {
+            background: var(--surface-hover);
+            color: white;
+        }
     </style>
 </head>
 <body>
 
 <div class="app-container">
     <div class="header">
-        <h1>Generador de Avatar Smart</h1>
-        <p>Escribe el guion, elige tu foto y arma tu contenido.</p>
+        <h1>Gesto Smart • Placas Express</h1>
+        <p>Crea contenido de alto impacto visual sin editar videos.</p>
     </div>
 
     <div class="content-body">
         <div class="form-group">
-            <label>Seleccionar Foto Base del Avatar</label>
-            <select id="photo-select">
-                <option value="https://irbok2fr6ltfzhah.public.blob.vercel-storage.com/captures/front-1788449830122-xWGXVgh170CxCuJHvmT7S...jpg">Foto Oficial Principal (Gafas)</option>
-                <option value="custom">Subir nueva foto al vuelo...</option>
-            </select>
-        </div>
-
-        <div class="form-group" id="custom-file-group" style="display: none;">
-            <label>Cargar Imagen de Rostro</label>
-            <input type="file" id="custom-photo-file" accept="image/*">
+            <label>Gancho / Dolor del Cliente (Texto Principal)</label>
+            <textarea id="script-input" placeholder="¿Cansada de actualizar precios a mano y quedarte sin stock a medianoche?">¿Cansada de actualizar precios a mano y quedarte sin stock a medianoche?</textarea>
         </div>
 
         <div class="form-group">
-            <label>Escenario / Estilo de Video</label>
-            <select id="scene-select">
-                <option value="plaza">Caminando en la Plaza (Casual)</option>
-                <option value="office">Oficina Tech / Minimalista</option>
-                <option value="studio">Estudio Profesional</option>
-            </select>
+            <label>Elegir Estilo Visual</label>
+            <div class="templates-grid">
+                <div class="template-card active" data-style="dark">Dark Tech</div>
+                <div class="template-card" data-style="vibrant">Vibrante</div>
+                <div class="template-card" data-style="minimal">Minimal</div>
+            </div>
         </div>
 
         <div class="form-group">
-            <label>Guion Comercial (Gesto Smart)</label>
-            <textarea id="script-input" placeholder="Yo sé que cada vez que actualizas tardas horas... ¿cuánto pensás que tardas con catálogo lite?"></textarea>
+            <label>Vista Previa en Vivo (Formato Reel/TikTok)</label>
+            <div id="preview-box" class="preview-container" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
+                <div class="preview-content">
+                    <span id="badge-text" class="preview-badge" style="background: #38bdf8; color: #0b0f19;">Gesto Smart</span>
+                    <h2 id="preview-text" class="preview-hook">¿Cansada de actualizar precios a mano y quedarte sin stock a medianoche?</h2>
+                </div>
+                <div id="brand-text" class="preview-brand">gestosmart.app</div>
+            </div>
         </div>
     </div>
 
     <div class="controls">
-        <button id="generate-btn" class="btn">Generar Video Automático</button>
-    </div>
-
-    <div id="success-screen" class="success-screen">
-        <h2>¡Contenido en Producción! 🚀</h2>
-        <p>El motor de IA está procesando tu foto y sintetizando el guion.</p>
-        <p>¡El sistema respondió con éxito y el video está en marcha!</p>
-        <button class="btn" style="background:#007aff; margin-top:10px;" onclick="location.reload()">Crear Otro</button>
+        <button id="copy-text-btn" class="btn btn-secondary">Copiar Copy</button>
+        <button id="download-plate-btn" class="btn">📸 Guardar Placa</button>
     </div>
 </div>
 
 <script>
-    const generateBtn = document.getElementById('generate-btn');
     const scriptInput = document.getElementById('script-input');
-    const sceneSelect = document.getElementById('scene-select');
-    const photoSelect = document.getElementById('photo-select');
-    const customPhotoFile = document.getElementById('custom-photo-file');
-    const customFileGroup = document.getElementById('custom-file-group');
-    const successScreen = document.getElementById('success-screen');
+    const previewText = document.getElementById('preview-text');
+    const previewBox = document.getElementById('preview-box');
+    const badgeText = document.getElementById('badge-text');
+    const brandText = document.getElementById('brand-text');
+    const templateCards = document.querySelectorAll('.template-card');
+    const copyTextBtn = document.getElementById('copy-text-btn');
+    const downloadPlateBtn = document.getElementById('download-plate-btn');
 
-    photoSelect.addEventListener('change', (e) => {
-        if (e.target.value === 'custom') {
-            customFileGroup.style.display = 'flex';
-        } else {
-            customFileGroup.style.display = 'none';
+    let currentStyle = 'dark';
+
+    // Estilos predefinidos para las placas
+    const stylesConfig = {
+        dark: {
+            bg: 'linear-gradient(135deg, #090d16 0%, #172033 100%)',
+            color: '#f8fafc',
+            badgeBg: '#38bdf8',
+            badgeColor: '#0b0f19',
+            brandColor: '#94a3b8'
+        },
+        vibrant: {
+            bg: 'linear-gradient(135deg, #f43f5e 0%, #7c2d12 100%)',
+            color: '#ffffff',
+            badgeBg: '#fef08a',
+            badgeColor: '#7c2d12',
+            brandColor: '#fed7aa'
+        },
+        minimal: {
+            bg: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+            color: '#0f172a',
+            badgeBg: '#0f172a',
+            badgeColor: '#f8fafc',
+            brandColor: '#64748b'
         }
+    };
+
+    // Actualizar texto en tiempo real
+    scriptInput.addEventListener('input', (e) => {
+        previewText.innerText = e.target.value || "Escribe tu texto arriba...";
     });
 
-    generateBtn.addEventListener('click', async () => {
-        const textScript = scriptInput.value.trim();
-        const selectedScene = sceneSelect.value;
-        const selectedPhoto = photoSelect.value;
+    // Cambiar estilo visual
+    templateCards.forEach(card => {
+        card.addEventListener('click', () => {
+            templateCards.forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+            currentStyle = card.getAttribute('data-style');
+            
+            const cfg = stylesConfig[currentStyle];
+            previewBox.style.background = cfg.bg;
+            previewBox.style.color = cfg.color;
+            badgeText.style.background = cfg.badgeBg;
+            badgeText.style.color = cfg.badgeColor;
+            brandText.style.color = cfg.brandColor;
+        });
+    });
 
-        if (!textScript) {
-            alert("Por favor, escribe un guion para que el avatar pueda hablar.");
-            return;
-        }
+    // Copiar texto para usar de descripción en redes
+    copyTextBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(scriptInput.value);
+        copyTextBtn.innerText = "¡Copiado! ✅";
+        setTimeout(() => copyTextBtn.innerText = "Copiar Copy", 2000);
+    });
 
-        generateBtn.disabled = true;
-        generateBtn.innerText = "Procesando contenido...";
-
-        try {
-            let photoUrlToUse = selectedPhoto;
-
-            if (selectedPhoto === 'custom' && customPhotoFile.files[0]) {
-                const file = customPhotoFile.files[0];
-                photoUrlToUse = await new Promise((resolve) => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => resolve(reader.result);
-                    reader.readAsDataURL(file);
-                });
-            }
-
-            const response = await fetch('/api/generate-avatar', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    script: textScript,
-                    scene: selectedScene,
-                    photoUrl: photoUrlToUse
-                })
-            });
-
-            const result = await response.json();
-
-            if (response.ok && result.success) {
-                successScreen.style.display = 'flex';
-            } else {
-                throw new Error(result.error || "Error al procesar el guion");
-            }
-        } catch (error) {
-            alert("Fallo el proceso: " + error.message);
-            generateBtn.disabled = false;
-            generateBtn.innerText = "Generar Video Automático";
-        }
+    // Acción para guardar / descargar (Aviso intuitivo para captura en celular)
+    downloadPlateBtn.addEventListener('click', () => {
+        alert("💡 Tip desde el celu: Hacé una captura de pantalla (screenshot) de la vista previa de arriba para recortar la placa perfecta y subirla de toque a tus historias o reels.");
     });
 </script>
 </body>
