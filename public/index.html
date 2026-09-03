@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Captura de Avatar Smart</title>
-    <!-- SDK oficial de Vercel Blob para navegador -->
-    <script src="https://sdk.vercel.com/blob/client.js"></script>
     <style>
         :root {
             --bg-color: #f7f7f8;
@@ -197,8 +195,8 @@
     let audioChunks = [];
 
     const userAssets = {
-        frontBlobUrl: null,
-        audioBlobUrl: null
+        frontPhoto: null,
+        audioSample: null
     };
 
     async function startCamera() {
@@ -213,7 +211,7 @@
         }
     }
 
-    async function capturePhotoBlob() {
+    function capturePhoto() {
         const canvas = document.createElement('canvas');
         canvas.width = 720;
         canvas.height = 1280;
@@ -221,39 +219,19 @@
         ctx.translate(canvas.width, 0);
         ctx.scale(-1, 1);
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        
-        return new Promise(resolve => {
-            canvas.toBlob(blob => resolve(blob), 'image/jpeg', 0.8);
-        });
+        return canvas.toDataURL('image/jpeg', 0.8);
     }
 
     actionBtn.addEventListener('click', async () => {
         if (currentStep === 1) {
-            actionBtn.disabled = true;
-            actionBtn.innerText = "Subiendo foto...";
-            
-            try {
-                const photoBlob = await capturePhotoBlob();
-                // Subida directa al Vercel Blob desde el cliente
-                const newBlob = await window.VercelBlob.upload(`captures/front-${Date.now()}.jpg`, photoBlob, {
-                    access: 'public',
-                    handleUploadUrl: '/api/upload-token' // Usaremos el token automático del cliente
-                });
-                userAssets.frontBlobUrl = newBlob.url;
-
-                currentStep = 2;
-                stepTitle.innerText = "Foto de Perfil";
-                stepDesc.innerText = "Gira tu cabeza hacia la derecha. Mantén la vista al frente.";
-                actionBtn.innerText = "Tomar Foto Perfil";
-                actionBtn.disabled = false;
-                faceGuide.classList.add('profile');
-                document.getElementById('dot-1').classList.remove('active');
-                document.getElementById('dot-2').classList.add('active');
-            } catch (err) {
-                alert("Error al subir la foto: " + err.message);
-                actionBtn.disabled = false;
-                actionBtn.innerText = "Tomar Foto Frontal";
-            }
+            userAssets.frontPhoto = capturePhoto();
+            currentStep = 2;
+            stepTitle.innerText = "Foto de Perfil";
+            stepDesc.innerText = "Gira tu cabeza hacia la derecha. Mantén la vista al frente.";
+            actionBtn.innerText = "Tomar Foto Perfil";
+            faceGuide.classList.add('profile');
+            document.getElementById('dot-1').classList.remove('active');
+            document.getElementById('dot-2').classList.add('active');
             
         } else if (currentStep === 2) {
             currentStep = 3;
@@ -294,38 +272,34 @@
             
             mediaRecorder.onstop = async () => {
                 const mime = mediaRecorder.mimeType || 'audio/webm';
-                const audioBlobSample = new Blob(audioChunks, { type: mime });
+                userAssets.audioSample = new Blob(audioChunks, { type: mime });
                 
-                if (audioBlobSample.size < 10000) {
+                if (userAssets.audioSample.size < 10000) {
                     alert("ERROR: El hardware no capturó audio (0 bytes).");
                     window.location.reload();
                     return;
                 }
                 
                 stepTitle.innerText = "¡Subiendo Assets!";
-                stepDesc.innerText = "Enviando audio a la nube...";
+                stepDesc.innerText = "Preparando datos en la nube...";
                 actionBtn.innerText = "Procesando...";
                 actionBtn.disabled = true;
                 video.style.opacity = '0.3';
                 prompter.style.display = 'none';
 
                 try {
-                    const ext = mime.includes('mp4') ? 'mp4' : 'webm';
-                    // Subida directa del audio al Vercel Blob desde el cliente
-                    const audioBlobUploaded = await window.VercelBlob.upload(`captures/audio-${Date.now()}.${ext}`, audioBlobSample, {
-                        access: 'public',
-                        handleUploadUrl: '/api/upload-token'
-                    });
-                    userAssets.audioBlobUrl = audioBlobUploaded.url;
+                    const frontRes = await fetch(userAssets.frontPhoto);
+                    const frontBlob = await frontRes.blob();
+                    
+                    const formData = new FormData();
+                    formData.append('frontPhoto', frontBlob, 'front.jpg');
+                    
+                    const extension = mime.includes('mp4') ? 'mp4' : mime.includes('ogg') ? 'ogg' : 'webm';
+                    formData.append('audioSample', userAssets.audioSample, `voice.${extension}`);
 
-                    // Llamamos al backend para disparar el webhook de Fal.ai pasando solo las URLs
                     const response = await fetch('/api/generate-avatar', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            frontUrl: userAssets.frontBlobUrl,
-                            audioUrl: userAssets.audioBlobUrl
-                        })
+                        body: formData
                     });
 
                     const result = await response.json();
