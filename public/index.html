@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gesto Smart • Creador Estilo Instagram</title>
+    <title>Gesto Smart • Creador Pro Redes</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
@@ -39,7 +39,7 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
-            max-height: 78vh;
+            max-height: 80vh;
             overflow-y: auto;
         }
 
@@ -48,11 +48,11 @@
 
         textarea {
             width: 100%;
-            height: 70px;
-            padding: 10px;
+            height: 60px;
+            padding: 8px;
             border: 1px solid var(--border);
             border-radius: 8px;
-            font-size: 13px;
+            font-size: 12px;
             background: #0f172a;
             color: white;
             resize: none;
@@ -66,7 +66,7 @@
             gap: 8px;
         }
 
-        select, input[type="file"] {
+        select, input[type="file"], input[type="color"] {
             width: 100%;
             padding: 8px;
             background: #0f172a;
@@ -83,7 +83,7 @@
             color: var(--text-muted);
             padding: 8px;
             border-radius: 6px;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 600;
             cursor: pointer;
             text-align: center;
@@ -94,10 +94,11 @@
             border-color: var(--primary);
         }
 
+        /* Vista previa 9:16 estricta */
         .preview-container {
             width: 100%;
             aspect-ratio: 9 / 16;
-            background: #0f172a;
+            background: #0b0f19;
             border-radius: 12px;
             display: flex;
             position: relative;
@@ -109,10 +110,7 @@
 
         .preview-bg-media {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0; width: 100%; height: 100%;
             object-fit: cover;
             z-index: 1;
             display: none;
@@ -121,40 +119,40 @@
         .preview-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.4);
+            background: rgba(0, 0, 0, 0.3);
             z-index: 2;
         }
 
+        /* Cajas de texto independientes (Arriba y Abajo) */
         .preview-text-box {
             position: absolute;
-            width: 88%;
+            width: 90%;
+            left: 5%;
             z-index: 3;
             text-align: center;
-            padding: 12px 16px;
-            border-radius: 10px;
+            padding: 10px 14px;
+            border-radius: 8px;
             transition: all 0.2s ease;
         }
 
-        .align-top { top: 20px; }
-        .align-center { top: 50%; transform: translateY(-50%); }
-        .align-bottom { bottom: 30px; }
+        .box-top { top: 12px; }
+        .box-bottom { bottom: 12px; }
 
         .bg-box-on {
             background: rgba(11, 15, 25, 0.85);
-            backdrop-filter: blur(6px);
+            backdrop-filter: blur(4px);
             border: 1px solid rgba(56, 189, 248, 0.3);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.6);
         }
         .bg-box-off {
             background: transparent;
-            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.95), 0 0 12px rgba(0,0,0,0.9);
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.95), 0 0 10px rgba(0,0,0,0.9);
         }
 
         .preview-hook {
-            font-size: 16px;
-            line-height: 1.35;
+            font-size: 14px;
+            line-height: 1.3;
             word-break: break-word;
-            color: #ffffff;
         }
 
         .controls {
@@ -184,53 +182,49 @@
 
 <div class="app-container">
     <div class="header">
-        <h1>Gesto Smart • Editor Libre</h1>
-        <p>Sube fotos o videos cortos en pantalla completa.</p>
+        <h1>Gesto Smart • Editor Profesional</h1>
+        <p>Texto arriba, texto abajo y control total.</p>
     </div>
 
     <div class="content-body">
         <div class="form-group">
-            <label>Texto y Emojis 📝✨</label>
-            <textarea id="script-input" placeholder="Escribe tu gancho con emojis...">¿La agenda de papel? 😳 Y si pudieras tener todo en tu tablet o compu? 🚀</textarea>
+            <label>📝 Texto Superior (Gancho)</label>
+            <textarea id="input-top" placeholder="Ej: ¿Cuánto tardás en hacer el catálogo? 😳">¿Cuánto tardás en hacer el catálogo? 😳</textarea>
+        </div>
+
+        <div class="form-group">
+            <label>💬 Texto Inferior (Llamado a la acción)</label>
+            <textarea id="input-bottom" placeholder="Ej: Subí un excel y la magia ocurre sola 🚀">Subí el catálogo con un simple excel y la magia se hace sola. 🚀</textarea>
         </div>
 
         <div class="row-options">
             <div class="form-group">
-                <label>Tipografía (Fuente)</label>
+                <label>Tipografía</label>
                 <select id="font-family-select">
-                    <option value="-apple-system, sans-serif">Moderna (Clean)</option>
+                    <option value="-apple-system, sans-serif">Moderna</option>
                     <option value="Impact, sans-serif">Titular Fuerte (Impact)</option>
-                    <option value="'Courier New', monospace">Clásica / Código</option>
-                    <option value="'Georgia', serif">Elegante (Serif)</option>
+                    <option value="'Courier New', monospace">Código</option>
                 </select>
             </div>
             <div class="form-group">
-                <label>Ubicación del Texto</label>
-                <select id="text-align-select">
-                    <option value="align-bottom">Abajo</option>
-                    <option value="align-center">Centro</option>
-                    <option value="align-top">Arriba</option>
-                </select>
+                <label>Color de Letra</label>
+                <input type="color" id="text-color-picker" value="#ffffff">
             </div>
         </div>
 
         <div class="row-options">
             <div class="form-group">
-                <label>Fondo detrás del texto</label>
-                <button type="button" id="toggle-bg-btn" class="toggle-btn active">Caja Oscura: ON</button>
+                <label>Fondo Caja Superior</label>
+                <button type="button" id="toggle-top-bg" class="toggle-btn active">Caja: ON</button>
             </div>
             <div class="form-group">
-                <label>Alineación del texto</label>
-                <select id="text-justify-select">
-                    <option value="center">Centrado</option>
-                    <option value="left">Izquierda</option>
-                    <option value="right">Derecha</option>
-                </select>
+                <label>Fondo Caja Inferior</label>
+                <button type="button" id="toggle-bottom-bg" class="toggle-btn active">Caja: ON</button>
             </div>
         </div>
 
         <div class="form-group">
-            <label>Subir Imagen o Video Corto</label>
+            <label>Subir Imagen o Video (Ideal 1080x1920)</label>
             <input type="file" id="media-file-input" accept="image/*,video/*">
         </div>
 
@@ -240,89 +234,86 @@
                 <img id="bg-image" class="preview-bg-media" alt="Fondo">
                 <video id="bg-video" class="preview-bg-media" autoplay muted loop playsinline></video>
                 <div class="preview-overlay"></div>
-                <div id="preview-text-box" class="preview-text-box align-bottom bg-box-on">
-                    <p id="preview-text" class="preview-hook">¿La agenda de papel? 😳 Y si pudieras tener todo en tu tablet o compu? 🚀</p>
+                
+                <!-- Bloque Superior -->
+                <div id="box-top-elem" class="preview-text-box box-top bg-box-on">
+                    <p id="text-top-elem" class="preview-hook" style="color: #ffffff;">¿Cuánto tardás en hacer el catálogo? 😳</p>
+                </div>
+
+                <!-- Bloque Inferior -->
+                <div id="box-bottom-elem" class="preview-text-box box-bottom bg-box-on">
+                    <p id="text-bottom-elem" class="preview-hook" style="color: #ffffff;">Subí el catálogo con un simple excel y la magia se hace sola. 🚀</p>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="controls">
-        <button id="copy-text-btn" class="btn btn-secondary">Copiar Copy</button>
-        <button id="download-plate-btn" class="btn">📥 Descargar Placa</button>
+        <button id="download-plate-btn" class="btn">📥 Descargar Placa Perfecta</button>
     </div>
 </div>
 
 <script>
-    const scriptInput = document.getElementById('script-input');
-    const previewText = document.getElementById('preview-text');
-    const previewTextBox = document.getElementById('preview-text-box');
+    const inputTop = document.getElementById('input-top');
+    const inputBottom = document.getElementById('input-bottom');
+    const textTopElem = document.getElementById('text-top-elem');
+    const textBottomElem = document.getElementById('text-bottom-elem');
+    const boxTopElem = document.getElementById('box-top-elem');
+    const boxBottomElem = document.getElementById('box-bottom-elem');
     const fontFamilySelect = document.getElementById('font-family-select');
-    const textAlignSelect = document.getElementById('text-align-select');
-    const textJustifySelect = document.getElementById('text-justify-select');
-    const toggleBgBtn = document.getElementById('toggle-bg-btn');
+    const textColorPicker = document.getElementById('text-color-picker');
+    const toggleTopBg = document.getElementById('toggle-top-bg');
+    const toggleBottomBg = document.getElementById('toggle-bottom-bg');
     const mediaFileInput = document.getElementById('media-file-input');
     const bgImage = document.getElementById('bg-image');
     const bgVideo = document.getElementById('bg-video');
     const previewBox = document.getElementById('preview-box');
-    const copyTextBtn = document.getElementById('copy-text-btn');
     const downloadPlateBtn = document.getElementById('download-plate-btn');
 
-    let hasBoxBg = true;
+    let topHasBg = true;
+    let bottomHasBg = true;
 
-    scriptInput.addEventListener('input', (e) => {
-        previewText.innerText = e.target.value || "Escribe tu texto...";
-    });
+    inputTop.addEventListener('input', (e) => { textTopElem.innerText = e.target.value; });
+    inputBottom.addEventListener('input', (e) => { textBottomElem.innerText = e.target.value; });
 
     fontFamilySelect.addEventListener('change', (e) => {
-        previewText.style.fontFamily = e.target.value;
+        textTopElem.style.fontFamily = e.target.value;
+        textBottomElem.style.fontFamily = e.target.value;
     });
 
-    textAlignSelect.addEventListener('change', (e) => {
-        previewTextBox.className = `preview-text-box ${e.target.value} ${hasBoxBg ? 'bg-box-on' : 'bg-box-off'}`;
+    textColorPicker.addEventListener('input', (e) => {
+        textTopElem.style.color = e.target.value;
+        textBottomElem.style.color = e.target.value;
     });
 
-    textJustifySelect.addEventListener('change', (e) => {
-        previewText.style.textAlign = e.target.value;
+    toggleTopBg.addEventListener('click', () => {
+        topHasBg = !topHasBg;
+        toggleTopBg.classList.toggle('active', topHasBg);
+        toggleTopBg.innerText = topHasBg ? "Caja: ON" : "Caja: OFF";
+        boxTopElem.className = `preview-text-box box-top ${topHasBg ? 'bg-box-on' : 'bg-box-off'}`;
     });
 
-    toggleBgBtn.addEventListener('click', () => {
-        hasBoxBg = !hasBoxBg;
-        if (hasBoxBg) {
-            toggleBgBtn.classList.add('active');
-            toggleBgBtn.innerText = "Caja Oscura: ON";
-            previewTextBox.classList.remove('bg-box-off');
-            previewTextBox.classList.add('bg-box-on');
-        } else {
-            toggleBgBtn.classList.remove('active');
-            toggleBgBtn.innerText = "Caja Oscura: OFF";
-            previewTextBox.classList.remove('bg-box-on');
-            previewTextBox.classList.add('bg-box-off');
-        }
+    toggleBottomBg.addEventListener('click', () => {
+        bottomHasBg = !bottomHasBg;
+        toggleBottomBg.classList.toggle('active', bottomHasBg);
+        toggleBottomBg.innerText = bottomHasBg ? "Caja: ON" : "Caja: OFF";
+        boxBottomElem.className = `preview-text-box box-bottom ${bottomHasBg ? 'bg-box-on' : 'bg-box-off'}`;
     });
 
     mediaFileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
-
         const fileURL = URL.createObjectURL(file);
-
         if (file.type.startsWith('video')) {
             bgImage.style.display = 'none';
             bgVideo.src = fileURL;
             bgVideo.style.display = 'block';
             bgVideo.play();
-        } else if (file.type.startsWith('image')) {
+        } else {
             bgVideo.style.display = 'none';
             bgImage.src = fileURL;
             bgImage.style.display = 'block';
         }
-    });
-
-    copyTextBtn.addEventListener('click', () => {
-        navigator.clipboard.writeText(scriptInput.value);
-        copyTextBtn.innerText = "¡Copiado! ✅";
-        setTimeout(() => copyTextBtn.innerText = "Copiar Copy", 2000);
     });
 
     downloadPlateBtn.addEventListener('click', async () => {
@@ -330,35 +321,23 @@
         downloadPlateBtn.disabled = true;
 
         try {
-            await new Promise(r => setTimeout(r, 800));
-
-            // Forzamos el ancho y alto exactos en alta definición para que la exportación sea idéntica a la vista previa
-            const canvas = await html2canvas(previewBox, {
-                useCORS: true,
-                scale: 3,
-                width: previewBox.offsetWidth,
-                height: previewBox.offsetHeight,
-                windowWidth: document.documentElement.clientWidth,
-                windowHeight: document.documentElement.clientHeight
-            });
-
-            const imageURI = canvas.toDataURL("image/png");
+            await new Promise(r => setTimeout(r, 600));
+            const canvas = await html2canvas(previewBox, { useCORS: true, scale: 3 });
             const link = document.createElement('a');
-            link.href = imageURI;
-            link.download = `gesto-smart-story-${Date.now()}.png`;
+            link.href = canvas.toDataURL("image/png");
+            link.download = `gesto-smart-${Date.now()}.png`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-
             downloadPlateBtn.innerText = "¡Listo en tu celu! 📥";
         } catch (error) {
-            alert("Error al descargar: " + error.message);
-            downloadPlateBtn.innerText = "📥 Descargar Placa";
+            alert("Error: " + error.message);
+            downloadPlateBtn.innerText = "📥 Descargar Placa Perfecta";
         } finally {
             setTimeout(() => {
-                downloadPlateBtn.innerText = "📥 Descargar Placa";
+                downloadPlateBtn.innerText = "📥 Descargar Placa Perfecta";
                 downloadPlateBtn.disabled = false;
-            }, 2500);
+            }, 2000);
         }
     });
 </script>
