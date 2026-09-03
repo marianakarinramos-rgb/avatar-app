@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Captura de Avatar Smart</title>
+    <title>Mago de Oz - Generador de Avatares</title>
     <style>
         :root {
             --bg-color: #f7f7f8;
@@ -62,11 +62,6 @@
             box-shadow: 0 0 0 4000px rgba(0,0,0,0.5);
             pointer-events: none;
             transition: all 0.3s ease;
-        }
-
-        .face-guide.profile {
-            width: 200px;
-            border-radius: 40% 60% 60% 40% / 50% 50% 50% 50%;
         }
 
         .prompter {
@@ -161,9 +156,9 @@
         <div id="prompter" class="prompter">"Hola, estoy creando mi avatar inteligente. Me aseguro de hablar con un tono natural y pausas relajadas."</div>
         
         <div id="success-screen" class="success-screen">
-            <h2>¡Captura Exitosa! 🚀</h2>
-            <p>Tus datos han sido subidos correctamente a la nube.</p>
-            <p>El avatar entró en la cola de renderizado y lo recibirás por correo una vez finalizado.</p>
+            <h2>¡Proceso Iniciado! 🚀</h2>
+            <p>Tus archivos se están procesando en segundo plano.</p>
+            <p>El avatar se generará automáticamente y lo recibirás en breve.</p>
         </div>
     </div>
 
@@ -172,7 +167,6 @@
         <div class="step-indicator" id="stepper">
             <div class="dot active" id="dot-1"></div>
             <div class="dot" id="dot-2"></div>
-            <div class="dot" id="dot-3"></div>
         </div>
     </div>
 </div>
@@ -207,7 +201,7 @@
             });
             video.srcObject = videoStream;
         } catch (err) {
-            alert("Necesitamos acceso a la cámara. Verifica los permisos del navegador.");
+            alert("Necesitamos acceso a la cámara. Verifica los permisos.");
         }
     }
 
@@ -226,40 +220,23 @@
         if (currentStep === 1) {
             userAssets.frontPhoto = capturePhoto();
             currentStep = 2;
-            stepTitle.innerText = "Foto de Perfil";
-            stepDesc.innerText = "Gira tu cabeza hacia la derecha. Mantén la vista al frente.";
-            actionBtn.innerText = "Tomar Foto Perfil";
-            faceGuide.classList.add('profile');
+            
+            stepTitle.innerText = "Muestra de Voz";
+            stepDesc.innerText = "Activando micrófono... lee el texto en pantalla.";
+            actionBtn.innerText = "Comenzar Grabación";
+            faceGuide.style.display = 'none';
+            prompter.style.display = 'block';
             document.getElementById('dot-1').classList.remove('active');
             document.getElementById('dot-2').classList.add('active');
             
-        } else if (currentStep === 2) {
-            currentStep = 3;
-            
-            stepTitle.innerText = "Muestra de Voz";
-            stepDesc.innerText = "Activando micrófono... por favor espera.";
-            actionBtn.innerText = "Cargando...";
-            actionBtn.disabled = true;
-            faceGuide.style.display = 'none';
-            prompter.style.display = 'block';
-            document.getElementById('dot-2').classList.remove('active');
-            document.getElementById('dot-3').classList.add('active');
-            
             try {
                 audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                stepDesc.innerText = "Lee el texto en pantalla con tu voz natural.";
-                actionBtn.innerText = "Comenzar Grabación";
-                actionBtn.disabled = false;
             } catch (err) {
                 alert("No se pudo acceder al micrófono.");
-                stepDesc.innerText = "Error de micrófono.";
-                actionBtn.innerText = "Reintentar";
-                actionBtn.disabled = false;
-                currentStep = 2; 
             }
             
-        } else if (currentStep === 3) {
-            currentStep = 4;
+        } else if (currentStep === 2) {
+            currentStep = 3;
             audioChunks = [];
             
             mediaRecorder = new MediaRecorder(audioStream);
@@ -274,72 +251,66 @@
                 const mime = mediaRecorder.mimeType || 'audio/webm';
                 userAssets.audioSample = new Blob(audioChunks, { type: mime });
                 
-                if (userAssets.audioSample.size < 10000) {
-                    alert("ERROR: El hardware no capturó audio (0 bytes).");
+                if (userAssets.audioSample.size < 5000) {
+                    alert("ERROR: No se detectó audio. Intenta de nuevo.");
                     window.location.reload();
                     return;
                 }
                 
-                stepTitle.innerText = "¡Subiendo Assets!";
-                stepDesc.innerText = "Preparando datos en la nube...";
-                actionBtn.innerText = "Procesando...";
+                stepTitle.innerText = "¡Procesando!";
+                stepDesc.innerText = "Enviando archivos al servidor...";
+                actionBtn.innerText = "Transmitiendo...";
                 actionBtn.disabled = true;
                 video.style.opacity = '0.3';
                 prompter.style.display = 'none';
 
                 try {
-                    const frontRes = await fetch(userAssets.frontPhoto);
-                    const frontBlob = await frontRes.blob();
+                    // Convertimos el audio a Base64
+                    const reader = new FileReader();
+                    reader.readAsDataURL(userAssets.audioSample);
                     
-                    const formData = new FormData();
-                    formData.append('frontPhoto', frontBlob, 'front.jpg');
-                    
-                    const extension = mime.includes('mp4') ? 'mp4' : mime.includes('ogg') ? 'ogg' : 'webm';
-                    formData.append('audioSample', userAssets.audioSample, `voice.${extension}`);
+                    reader.onloadend = async () => {
+                        const audioBase64 = reader.result;
+                        const extension = mime.includes('mp4') ? 'mp4' : 'webm';
 
-                    const response = await fetch('/api/generate-avatar', {
-                        method: 'POST',
-                        body: formData
-                    });
+                        const response = await fetch('/api/generate-avatar', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                frontBase64: userAssets.frontPhoto,
+                                audioBase64: audioBase64,
+                                audioExtension: extension
+                            })
+                        });
 
-                    const result = await response.json();
+                        const result = await response.json();
 
-                    if (response.ok && result.success) {
-                        headerSection.style.display = 'none';
-                        controlsSection.style.display = 'none';
-                        video.style.display = 'none';
-                        successScreen.style.display = 'flex';
-                        
-                        if (videoStream) videoStream.getTracks().forEach(track => track.stop());
-                        if (audioStream) audioStream.getTracks().forEach(track => track.stop());
-                    } else {
-                        throw new Error(result.error || "Error en el servidor");
-                    }
+                        if (response.ok && result.success) {
+                            headerSection.style.display = 'none';
+                            controlsSection.style.display = 'none';
+                            video.style.display = 'none';
+                            successScreen.style.display = 'flex';
+                            
+                            if (videoStream) videoStream.getTracks().forEach(track => track.stop());
+                            if (audioStream) audioStream.getTracks().forEach(track => track.stop());
+                        } else {
+                            throw new Error(result.error || "Error en el servidor");
+                        }
+                    };
                 } catch (error) {
                     alert("Fallo el proceso: " + error.message);
-                    stepTitle.innerText = "Error";
-                    stepDesc.innerText = "Hubo un problema de conexión.";
-                    actionBtn.innerText = "Reintentar";
-                    actionBtn.disabled = false;
-                    video.style.opacity = '1';
+                    window.location.reload();
                 }
             };
 
             mediaRecorder.start(500);
-            
-            actionBtn.innerText = "Grabando... (Espera)";
+            actionBtn.innerText = "Grabando... (Presiona para detener)";
             actionBtn.classList.add('recording');
-            actionBtn.disabled = true; 
-            stepDesc.innerText = "Grabando... lee el texto en voz alta y presiona detener.";
             
-            setTimeout(() => {
-                actionBtn.innerText = "Detener Grabación";
-                actionBtn.disabled = false;
-            }, 2000);
-            
-        } else if (currentStep === 4) {
+        } else if (currentStep === 3) {
             mediaRecorder.stop();
             actionBtn.classList.remove('recording');
+            actionBtn.disabled = true;
         }
     });
 
