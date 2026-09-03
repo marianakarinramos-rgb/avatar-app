@@ -40,6 +40,7 @@
             justify-content: center;
             align-items: center;
             overflow: hidden;
+            flex-direction: column;
         }
 
         video {
@@ -124,12 +125,32 @@
         }
         .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); }
         .dot.active { background: var(--accent); }
+
+        .success-screen {
+            display: none;
+            text-align: center;
+            padding: 40px 24px;
+            color: white;
+            background: var(--primary);
+            width: 100%;
+            height: 100%;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 16px;
+            z-index: 10;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        .success-screen h2 { font-size: 24px; margin-bottom: 8px; }
+        .success-screen p { font-size: 16px; color: #eaecf0; line-height: 1.5; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    <div class="header">
+    <div class="header" id="header-section">
         <h1 id="step-title">Foto Frontal</h1>
         <p id="step-desc">Alinea tu rostro dentro de la guía y mira a la cámara.</p>
     </div>
@@ -138,9 +159,15 @@
         <video id="camera-feed" autoplay playsinline></video>
         <div id="face-guide" class="face-guide"></div>
         <div id="prompter" class="prompter">"Hola, estoy creando mi avatar inteligente. Me aseguro de hablar con un tono natural y pausas relajadas."</div>
+        
+        <div id="success-screen" class="success-screen">
+            <h2>¡Captura Exitosa! 🚀</h2>
+            <p>Tus datos han sido subidos correctamente a la nube.</p>
+            <p>El avatar entró en la cola de renderizado y lo recibirás por correo una vez finalizado.</p>
+        </div>
     </div>
 
-    <div class="controls">
+    <div class="controls" id="controls-section">
         <button id="main-action-btn" class="btn">Tomar Foto Frontal</button>
         <div class="step-indicator" id="stepper">
             <div class="dot active" id="dot-1"></div>
@@ -157,8 +184,9 @@
     const stepDesc = document.getElementById('step-desc');
     const faceGuide = document.getElementById('face-guide');
     const prompter = document.getElementById('prompter');
-    const videoContainer = document.getElementById('video-container');
-    const stepper = document.getElementById('stepper');
+    const successScreen = document.getElementById('success-screen');
+    const headerSection = document.getElementById('header-section');
+    const controlsSection = document.getElementById('controls-section');
     
     let currentStep = 1;
     let stream = null;
@@ -194,7 +222,7 @@
         ctx.translate(canvas.width, 0);
         ctx.scale(-1, 1);
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        return canvas.toDataURL('image/jpeg', 0.8); // Comprimido para evitar sobrecargar la red
+        return canvas.toDataURL('image/jpeg', 0.8);
     }
 
     actionBtn.addEventListener('click', async () => {
@@ -233,9 +261,9 @@
                 mediaRecorder.onstop = async () => {
                     userAssets.audioSample = new Blob(audioChunks, { type: 'audio/webm' });
                     
-                    stepTitle.innerText = "¡Procesando!";
-                    stepDesc.innerText = "Enviando datos al servidor...";
-                    actionBtn.innerText = "Generando...";
+                    stepTitle.innerText = "¡Subiendo Assets!";
+                    stepDesc.innerText = "Preparando datos en la nube...";
+                    actionBtn.innerText = "Procesando...";
                     actionBtn.disabled = true;
                     video.style.opacity = '0.3';
                     prompter.style.display = 'none';
@@ -247,9 +275,6 @@
                         const formData = new FormData();
                         formData.append('frontPhoto', frontBlob, 'front.jpg');
                         formData.append('audioSample', userAssets.audioSample, 'voice.webm');
-                        formData.append('textToSpeak', 'Hola, soy tu nuevo avatar con inteligencia artificial.');
-
-                        stepDesc.innerText = "Creando voz y animando rostro en la nube...";
 
                         const response = await fetch('/api/generate-avatar', {
                             method: 'POST',
@@ -259,30 +284,21 @@
                         const result = await response.json();
 
                         if (response.ok && result.success) {
-                            videoContainer.innerHTML = `
-                                <video src="${result.video_url}" controls autoplay playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
-                            `;
-                            stepTitle.innerText = "¡Avatar Listo!";
-                            stepDesc.innerText = "Tu video se ha generado con éxito.";
-                            actionBtn.innerText = "Descargar Video";
-                            actionBtn.disabled = false;
-                            stepper.style.display = 'none';
+                            headerSection.style.display = 'none';
+                            controlsSection.style.display = 'none';
+                            video.style.display = 'none';
+                            successScreen.style.display = 'flex';
                             
-                            actionBtn.onclick = () => {
-                                const a = document.createElement('a');
-                                a.href = result.video_url;
-                                a.download = 'avatar-inteligente.mp4';
-                                document.body.appendChild(a);
-                                a.click();
-                                document.body.removeChild(a);
-                            };
+                            if (stream) {
+                                stream.getTracks().forEach(track => track.stop());
+                            }
                         } else {
-                            throw new Error(result.error || "Error desconocido en el servidor");
+                            throw new Error(result.error || "Error en el servidor");
                         }
                     } catch (error) {
                         alert("Fallo el proceso: " + error.message);
                         stepTitle.innerText = "Error";
-                        stepDesc.innerText = "Hubo un problema al generar el avatar.";
+                        stepDesc.innerText = "Hubo un problema de conexión.";
                         actionBtn.innerText = "Reintentar";
                         actionBtn.disabled = false;
                         video.style.opacity = '1';
@@ -290,9 +306,17 @@
                 };
 
                 mediaRecorder.start();
-                actionBtn.innerText = "Detener Grabación";
+                actionBtn.innerText = "Grabando... (Espera)";
                 actionBtn.classList.add('recording');
+                actionBtn.disabled = true; 
                 stepDesc.innerText = "Grabando... lee el texto en voz alta y presiona detener.";
+                
+                // Forzamos 2 segundos de grabación mínima para evitar envíos en blanco
+                setTimeout(() => {
+                    actionBtn.innerText = "Detener Grabación";
+                    actionBtn.disabled = false;
+                }, 2000);
+                
             } else {
                 mediaRecorder.stop();
                 actionBtn.classList.remove('recording');
