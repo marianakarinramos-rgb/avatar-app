@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mago de Oz - Generador de Avatares</title>
+    <title>Generador de Contenido - IA Smart</title>
     <style>
         :root {
             --bg-color: #f7f7f8;
@@ -28,64 +28,71 @@
             box-shadow: 0 4px 24px rgba(0,0,0,0.05);
         }
 
-        .header { padding: 24px; text-align: center; border-bottom: 1px solid var(--border); }
-        .header h1 { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
-        .header p { font-size: 14px; color: #667085; }
+        .header { padding: 20px; text-align: center; border-bottom: 1px solid var(--border); }
+        .header h1 { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+        .header p { font-size: 13px; color: #667085; }
 
-        .viewport-container {
+        .content-body {
             flex: 1;
-            position: relative;
-            background: #000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            flex-direction: column;
-        }
-
-        video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transform: scaleX(-1);
-        }
-
-        .face-guide {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 250px;
-            height: 350px;
-            border: 2px dashed rgba(255, 255, 255, 0.7);
-            border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
-            box-shadow: 0 0 0 4000px rgba(0,0,0,0.5);
-            pointer-events: none;
-            transition: all 0.3s ease;
-        }
-
-        .prompter {
-            display: none;
-            position: absolute;
-            top: 20%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.8);
-            color: white;
-            padding: 20px;
-            border-radius: 12px;
-            width: 80%;
-            text-align: center;
-            font-size: 18px;
-            line-height: 1.4;
-        }
-
-        .controls {
             padding: 24px;
-            background: var(--surface);
             display: flex;
             flex-direction: column;
             gap: 16px;
+            overflow-y: auto;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label { font-size: 14px; font-weight: 600; color: var(--primary); }
+
+        textarea {
+            width: 100%;
+            height: 140px;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            resize: none;
+            outline: none;
+        }
+        textarea:focus { border-color: var(--accent); }
+
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            outline: none;
+        }
+
+        .preview-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .preview-box img {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .preview-box span { font-size: 14px; font-weight: 500; color: #344054; }
+
+        .controls {
+            padding: 20px;
+            background: var(--surface);
             border-top: 1px solid var(--border);
         }
 
@@ -98,28 +105,11 @@
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: opacity 0.2s;
             width: 100%;
+            transition: opacity 0.2s;
         }
-        
         .btn:disabled { background: #98a2b3; cursor: not-allowed; }
         .btn:active:not(:disabled) { opacity: 0.8; }
-        .btn.recording { background: #d92d20; animation: pulse 1.5s infinite; }
-
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(217, 45, 32, 0.4); }
-            70% { box-shadow: 0 0 0 10px rgba(217, 45, 32, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(217, 45, 32, 0); }
-        }
-
-        .step-indicator {
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            margin-top: 16px;
-        }
-        .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); }
-        .dot.active { background: var(--accent); }
 
         .success-screen {
             display: none;
@@ -133,188 +123,100 @@
             align-items: center;
             flex-direction: column;
             gap: 16px;
-            z-index: 10;
             position: absolute;
             top: 0;
             left: 0;
+            z-index: 10;
         }
-        .success-screen h2 { font-size: 24px; margin-bottom: 8px; }
-        .success-screen p { font-size: 16px; color: #eaecf0; line-height: 1.5; }
+        .success-screen h2 { font-size: 24px; }
+        .success-screen p { font-size: 15px; color: #eaecf0; line-height: 1.5; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    <div class="header" id="header-section">
-        <h1 id="step-title">Foto Frontal</h1>
-        <p id="step-desc">Alinea tu rostro dentro de la guía y mira a la cámara.</p>
+    <div class="header">
+        <h1>Generador de Avatar Smart</h1>
+        <p>Escribe el guion y deja que la IA trabaje por vos.</p>
     </div>
 
-    <div class="viewport-container" id="video-container">
-        <video id="camera-feed" autoplay playsinline muted></video>
-        <div id="face-guide" class="face-guide"></div>
-        <div id="prompter" class="prompter">"Hola, estoy creando mi avatar inteligente. Me aseguro de hablar con un tono natural y pausas relajadas."</div>
-        
-        <div id="success-screen" class="success-screen">
-            <h2>¡Proceso Iniciado! 🚀</h2>
-            <p>Tus archivos se están procesando en segundo plano.</p>
-            <p>El avatar se generará automáticamente y lo recibirás en breve.</p>
+    <div class="content-body">
+        <div class="form-group">
+            <label>Tu Avatar Base (Fijo)</label>
+            <div class="preview-box">
+                <img src="https://irbok2fr6ltfzhah.public.blob.vercel-storage.com/captures/front-1788449830122-xWGXVgh170CxCuJHvmT7S...jpg" alt="Avatar">
+                <span>Foto Frontal Oficial (Cargada)</span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Escenario / Estilo de Video</label>
+            <select id="scene-select">
+                <option value="plaza">Caminando en la Plaza (Casual)</option>
+                <option value="office">Oficina Tech / Minimalista</option>
+                <option value="studio">Estudio Profesional</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Guion Comercial (¿Qué querés que diga tu app?)</label>
+            <textarea id="script-input" placeholder="Ej: ¿Cansada de renegar con los catálogos en PDF? Descubrí Gesto Smart, la app diseñada para gestionar tus ventas sin fricción..."></textarea>
         </div>
     </div>
 
-    <div class="controls" id="controls-section">
-        <button id="main-action-btn" class="btn">Tomar Foto Frontal</button>
-        <div class="step-indicator" id="stepper">
-            <div class="dot active" id="dot-1"></div>
-            <div class="dot" id="dot-2"></div>
-        </div>
+    <div class="controls">
+        <button id="generate-btn" class="btn">Generar Video Automático</button>
+    </div>
+
+    <div id="success-screen" class="success-screen">
+        <h2>¡Contenido en Producción! 🚀</h2>
+        <p>El motor de IA está procesando el guion y sintetizando tu voz.</p>
+        <p>En unos minutos tendrás el video listo en tu panel de Vercel Storage.</p>
     </div>
 </div>
 
 <script>
-    const video = document.getElementById('camera-feed');
-    const actionBtn = document.getElementById('main-action-btn');
-    const stepTitle = document.getElementById('step-title');
-    const stepDesc = document.getElementById('step-desc');
-    const faceGuide = document.getElementById('face-guide');
-    const prompter = document.getElementById('prompter');
+    const generateBtn = document.getElementById('generate-btn');
+    const scriptInput = document.getElementById('script-input');
+    const sceneSelect = document.getElementById('scene-select');
     const successScreen = document.getElementById('success-screen');
-    const headerSection = document.getElementById('header-section');
-    const controlsSection = document.getElementById('controls-section');
-    
-    let currentStep = 1;
-    let videoStream = null;
-    let audioStream = null;
-    let mediaRecorder = null;
-    let audioChunks = [];
 
-    const userAssets = {
-        frontPhoto: null,
-        audioSample: null
-    };
+    generateBtn.addEventListener('click', async () => {
+        const textScript = scriptInput.value.trim();
+        const selectedScene = sceneSelect.value;
 
-    async function startCamera() {
-        try {
-            videoStream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: "user", width: { ideal: 720 }, height: { ideal: 1280 } },
-                audio: false 
-            });
-            video.srcObject = videoStream;
-        } catch (err) {
-            alert("Necesitamos acceso a la cámara. Verifica los permisos.");
+        if (!textScript) {
+            alert("Por favor, escribe un guion para que el avatar pueda hablar.");
+            return;
         }
-    }
 
-    function capturePhoto() {
-        const canvas = document.createElement('canvas');
-        canvas.width = 720;
-        canvas.height = 1280;
-        const ctx = canvas.getContext('2d');
-        ctx.translate(canvas.width, 0);
-        ctx.scale(-1, 1);
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        return canvas.toDataURL('image/jpeg', 0.8);
-    }
+        generateBtn.disabled = true;
+        generateBtn.innerText = "Sintetizando voz y video...";
 
-    actionBtn.addEventListener('click', async () => {
-        if (currentStep === 1) {
-            userAssets.frontPhoto = capturePhoto();
-            currentStep = 2;
-            
-            stepTitle.innerText = "Muestra de Voz";
-            stepDesc.innerText = "Activando micrófono... lee el texto en pantalla.";
-            actionBtn.innerText = "Comenzar Grabación";
-            faceGuide.style.display = 'none';
-            prompter.style.display = 'block';
-            document.getElementById('dot-1').classList.remove('active');
-            document.getElementById('dot-2').classList.add('active');
-            
-            try {
-                audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            } catch (err) {
-                alert("No se pudo acceder al micrófono.");
+        try {
+            // Mandamos el texto y el escenario al backend para automatizar la generación
+            const response = await fetch('/api/generate-from-text', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    script: textScript,
+                    scene: selectedScene
+                })
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                successScreen.style.display = 'flex';
+            } else {
+                throw new Error(result.error || "Error al procesar el guion");
             }
-            
-        } else if (currentStep === 2) {
-            currentStep = 3;
-            audioChunks = [];
-            
-            mediaRecorder = new MediaRecorder(audioStream);
-            
-            mediaRecorder.ondataavailable = e => {
-                if (e.data && e.data.size > 0) {
-                    audioChunks.push(e.data);
-                }
-            };
-            
-            mediaRecorder.onstop = async () => {
-                const mime = mediaRecorder.mimeType || 'audio/webm';
-                userAssets.audioSample = new Blob(audioChunks, { type: mime });
-                
-                if (userAssets.audioSample.size < 5000) {
-                    alert("ERROR: No se detectó audio. Intenta de nuevo.");
-                    window.location.reload();
-                    return;
-                }
-                
-                stepTitle.innerText = "¡Procesando!";
-                stepDesc.innerText = "Enviando archivos al servidor...";
-                actionBtn.innerText = "Transmitiendo...";
-                actionBtn.disabled = true;
-                video.style.opacity = '0.3';
-                prompter.style.display = 'none';
-
-                try {
-                    // Convertimos el audio a Base64
-                    const reader = new FileReader();
-                    reader.readAsDataURL(userAssets.audioSample);
-                    
-                    reader.onloadend = async () => {
-                        const audioBase64 = reader.result;
-                        const extension = mime.includes('mp4') ? 'mp4' : 'webm';
-
-                        const response = await fetch('/api/generate-avatar', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                frontBase64: userAssets.frontPhoto,
-                                audioBase64: audioBase64,
-                                audioExtension: extension
-                            })
-                        });
-
-                        const result = await response.json();
-
-                        if (response.ok && result.success) {
-                            headerSection.style.display = 'none';
-                            controlsSection.style.display = 'none';
-                            video.style.display = 'none';
-                            successScreen.style.display = 'flex';
-                            
-                            if (videoStream) videoStream.getTracks().forEach(track => track.stop());
-                            if (audioStream) audioStream.getTracks().forEach(track => track.stop());
-                        } else {
-                            throw new Error(result.error || "Error en el servidor");
-                        }
-                    };
-                } catch (error) {
-                    alert("Fallo el proceso: " + error.message);
-                    window.location.reload();
-                }
-            };
-
-            mediaRecorder.start(500);
-            actionBtn.innerText = "Grabando... (Presiona para detener)";
-            actionBtn.classList.add('recording');
-            
-        } else if (currentStep === 3) {
-            mediaRecorder.stop();
-            actionBtn.classList.remove('recording');
-            actionBtn.disabled = true;
+        } catch (error) {
+            alert("Fallo el proceso: " + error.message);
+            generateBtn.disabled = false;
+            generateBtn.innerText = "Generar Video Automático";
         }
     });
-
-    startCamera();
 </script>
 </body>
 </html>
