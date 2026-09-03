@@ -1,0 +1,271 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Captura de Avatar Smart</title>
+    <style>
+        :root {
+            --bg-color: #f7f7f8;
+            --primary: #101828;
+            --accent: #007aff;
+            --surface: #ffffff;
+            --border: #eaecf0;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--primary); display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        
+        .app-container {
+            background: var(--surface);
+            width: 100%;
+            max-width: 480px;
+            height: 100vh;
+            max-height: 850px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.05);
+        }
+
+        .header { padding: 24px; text-align: center; border-bottom: 1px solid var(--border); }
+        .header h1 { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+        .header p { font-size: 14px; color: #667085; }
+
+        .viewport-container {
+            flex: 1;
+            position: relative;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1); /* Efecto espejo */
+        }
+
+        /* Guía visual para la cara */
+        .face-guide {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 250px;
+            height: 350px;
+            border: 2px dashed rgba(255, 255, 255, 0.7);
+            border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+            box-shadow: 0 0 0 4000px rgba(0,0,0,0.5); /* Oscurece el exterior */
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+
+        .face-guide.profile {
+            width: 200px;
+            border-radius: 40% 60% 60% 40% / 50% 50% 50% 50%;
+        }
+
+        /* Prompter para audio */
+        .prompter {
+            display: none;
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            width: 80%;
+            text-align: center;
+            font-size: 18px;
+            line-height: 1.4;
+        }
+
+        .controls {
+            padding: 24px;
+            background: var(--surface);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            width: 100%;
+        }
+        
+        .btn:active { opacity: 0.8; }
+        .btn.recording { background: #d92d20; animation: pulse 1.5s infinite; }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(217, 45, 32, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(217, 45, 32, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(217, 45, 32, 0); }
+        }
+
+        /* Pantallas de estado */
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 16px;
+        }
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); }
+        .dot.active { background: var(--accent); }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="header">
+        <h1 id="step-title">Foto Frontal</h1>
+        <p id="step-desc">Alinea tu rostro dentro de la guía y mira a la cámara.</p>
+    </div>
+
+    <div class="viewport-container">
+        <video id="camera-feed" autoplay playsinline></video>
+        <div id="face-guide" class="face-guide"></div>
+        <div id="prompter" class="prompter">"Hola, estoy creando mi avatar inteligente. Me aseguro de hablar con un tono natural y pausas relajadas."</div>
+    </div>
+
+    <div class="controls">
+        <button id="main-action-btn" class="btn">Tomar Foto Frontal</button>
+        <div class="step-indicator">
+            <div class="dot active" id="dot-1"></div>
+            <div class="dot" id="dot-2"></div>
+            <div class="dot" id="dot-3"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const video = document.getElementById('camera-feed');
+    const actionBtn = document.getElementById('main-action-btn');
+    const stepTitle = document.getElementById('step-title');
+    const stepDesc = document.getElementById('step-desc');
+    const faceGuide = document.getElementById('face-guide');
+    const prompter = document.getElementById('prompter');
+    
+    let currentStep = 1;
+    let stream = null;
+    let mediaRecorder = null;
+    let audioChunks = [];
+
+    // Almacenamiento temporal de los assets
+    const userAssets = {
+        frontPhoto: null,
+        profilePhoto: null,
+        audioSample: null
+    };
+
+    // Inicializar Cámara
+    async function startCamera(audio = false) {
+        try {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: "user", width: { ideal: 1080 }, height: { ideal: 1920 } },
+                audio: audio
+            });
+            video.srcObject = stream;
+        } catch (err) {
+            alert("Necesitamos acceso a la cámara y micrófono para crear tu avatar.");
+        }
+    }
+
+    // Capturar frame del video
+    function capturePhoto() {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        // Mantener el efecto espejo en la captura
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(video, 0, 0);
+        return canvas.toDataURL('image/jpeg', 0.9);
+    }
+
+    // Máquina de estados del flujo de UX
+    actionBtn.addEventListener('click', async () => {
+        if (currentStep === 1) {
+            // Guardar foto frontal y pasar a perfil
+            userAssets.frontPhoto = capturePhoto();
+            currentStep = 2;
+            stepTitle.innerText = "Foto de Perfil";
+            stepDesc.innerText = "Gira tu cabeza hacia la derecha. Mantén la vista al frente.";
+            actionBtn.innerText = "Tomar Foto Perfil";
+            faceGuide.classList.add('profile');
+            document.getElementById('dot-1').classList.remove('active');
+            document.getElementById('dot-2').classList.add('active');
+            
+        } else if (currentStep === 2) {
+            // Guardar foto perfil y preparar audio
+            userAssets.profilePhoto = capturePhoto();
+            currentStep = 3;
+            stepTitle.innerText = "Muestra de Voz";
+            stepDesc.innerText = "Lee el texto en pantalla con tu voz natural.";
+            actionBtn.innerText = "Comenzar Grabación";
+            faceGuide.style.display = 'none';
+            prompter.style.display = 'block';
+            document.getElementById('dot-2').classList.remove('active');
+            document.getElementById('dot-3').classList.add('active');
+            
+            // Reiniciar stream con audio
+            await startCamera(true);
+            
+        } else if (currentStep === 3) {
+            // Lógica de grabación de audio
+            if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+                audioChunks = [];
+                mediaRecorder = new MediaRecorder(stream);
+                
+                mediaRecorder.ondataavailable = e => {
+                    if (e.data.size > 0) audioChunks.push(e.data);
+                };
+                
+                mediaRecorder.onstop = () => {
+                    userAssets.audioSample = new Blob(audioChunks, { type: 'audio/webm' });
+                    // AQUÍ IRÍA EL FETCH POST A TU BACKEND / API
+                    console.log("Assets recolectados listos para enviar:", userAssets);
+                    stepTitle.innerText = "¡Listo!";
+                    stepDesc.innerText = "Procesando tu avatar. Esto puede tardar unos minutos.";
+                    actionBtn.innerText = "Creando Avatar...";
+                    actionBtn.disabled = true;
+                    video.style.opacity = '0.5';
+                    prompter.style.display = 'none';
+                };
+
+                mediaRecorder.start();
+                actionBtn.innerText = "Detener Grabación";
+                actionBtn.classList.add('recording');
+                stepDesc.innerText = "Grabando... lee el texto en voz alta.";
+            } else {
+                mediaRecorder.stop();
+                actionBtn.classList.remove('recording');
+            }
+        }
+    });
+
+    // Iniciar app
+    startCamera();
+</script>
+
+</body>
+</html>

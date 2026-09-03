@@ -1,0 +1,13 @@
+{
+  "name": "avatar-smart-app",
+  "version": "1.0.0",
+  "description": "App de captura y generación de avatares AI",
+  "main": "api/generate-avatar.js",
+  "type": "module",
+  "dependencies": {
+    "@vercel/blob": "^0.23.4",
+    "form-data": "^4.0.0",
+    "multiparty": "^4.2.3",
+    "node-fetch": "^3.3.2"
+  }
+}
