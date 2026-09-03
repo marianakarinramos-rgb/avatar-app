@@ -94,11 +94,11 @@
             border-color: var(--primary);
         }
 
-        /* Vista Previa Estilo Editor de Historia */
+        /* Vista Previa Estilo Editor de Historia 9:16 nativo sin espacios negros */
         .preview-container {
             width: 100%;
             aspect-ratio: 9 / 16;
-            background: #000;
+            background: #0f172a;
             border-radius: 12px;
             display: flex;
             position: relative;
@@ -108,23 +108,33 @@
             align-items: center;
         }
 
-        /* La imagen mantiene su proporción real sin deformarse */
+        /* La imagen llena toda la pantalla vertical de punta a punta */
         .preview-bg-image {
             position: absolute;
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
             z-index: 1;
+        }
+
+        /* Capa oscura sutil opcional para que realce el texto sobre la foto */
+        .preview-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.35);
+            z-index: 2;
         }
 
         /* Capa de texto flotante libre (estilo IG) */
         .preview-text-box {
             position: absolute;
-            width: 85%;
+            width: 88%;
             z-index: 3;
             text-align: center;
             padding: 12px 16px;
-            border-radius: 8px;
+            border-radius: 10px;
             transition: all 0.2s ease;
         }
 
@@ -133,21 +143,23 @@
         .align-center { top: 50%; transform: translateY(-50%); }
         .align-bottom { bottom: 30px; }
 
-        /* Estilos de Fondo para el texto (con o sin caja) */
+        /* Estilos de Fondo para el texto */
         .bg-box-on {
-            background: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(4px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            background: rgba(11, 15, 25, 0.85);
+            backdrop-filter: blur(6px);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
         }
         .bg-box-off {
             background: transparent;
-            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9), 0 0 10px rgba(0,0,0,0.8);
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.95), 0 0 12px rgba(0,0,0,0.9);
         }
 
         .preview-hook {
             font-size: 16px;
             line-height: 1.35;
             word-break: break-word;
+            color: #ffffff;
         }
 
         .controls {
@@ -178,7 +190,7 @@
 <div class="app-container">
     <div class="header">
         <h1>Gesto Smart • Editor Libre</h1>
-        <p>Estilo Instagram: elegí tipografía, fondo y posición.</p>
+        <p>Cero franjas negras: pantalla completa para redes.</p>
     </div>
 
     <div class="content-body">
@@ -228,9 +240,10 @@
         </div>
 
         <div class="form-group">
-            <label>Vista Previa Interactiva</label>
+            <label>Vista Previa Interactiva (Pantalla Completa)</label>
             <div id="preview-box" class="preview-container">
-                <img id="bg-image" class="preview-bg-image" alt="Flyer">
+                <img id="bg-image" class="preview-bg-image" alt="Flyer" style="display: none;">
+                <div class="preview-overlay"></div>
                 <div id="preview-text-box" class="preview-text-box align-bottom bg-box-on">
                     <p id="preview-text" class="preview-hook">¿La agenda de papel? 😳 Y si pudieras tener todo en tu tablet o compu? 🚀</p>
                 </div>
@@ -260,27 +273,22 @@
 
     let hasBoxBg = true;
 
-    // Actualizar texto y emojis en tiempo real
     scriptInput.addEventListener('input', (e) => {
         previewText.innerText = e.target.value || "Escribe tu texto...";
     });
 
-    // Cambiar tipografía
     fontFamilySelect.addEventListener('change', (e) => {
         previewText.style.fontFamily = e.target.value;
     });
 
-    // Cambiar posición (Arriba, Centro, Abajo)
     textAlignSelect.addEventListener('change', (e) => {
         previewTextBox.className = `preview-text-box ${e.target.value} ${hasBoxBg ? 'bg-box-on' : 'bg-box-off'}`;
     });
 
-    // Cambiar alineación del texto (Centro, Izquierda, Derecha)
     textJustifySelect.addEventListener('change', (e) => {
         previewText.style.textAlign = e.target.value;
     });
 
-    // Botón para prender/apagar el fondo oscuro detrás del texto
     toggleBgBtn.addEventListener('click', () => {
         hasBoxBg = !hasBoxBg;
         if (hasBoxBg) {
@@ -296,21 +304,19 @@
         }
     });
 
-    // Subir imagen base
     mediaFileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
         bgImage.src = URL.createObjectURL(file);
+        bgImage.style.display = 'block';
     });
 
-    // Copiar texto para redes
     copyTextBtn.addEventListener('click', () => {
         navigator.clipboard.writeText(scriptInput.value);
         copyTextBtn.innerText = "¡Copiado! ✅";
         setTimeout(() => copyTextBtn.innerText = "Copiar Copy", 2000);
     });
 
-    // Descarga blindada de la historia lista
     downloadPlateBtn.addEventListener('click', async () => {
         downloadPlateBtn.innerText = "Generando...";
         downloadPlateBtn.disabled = true;
