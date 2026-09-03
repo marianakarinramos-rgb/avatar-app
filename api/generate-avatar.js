@@ -1,21 +1,38 @@
+import { put } from "@vercel/blob";
+
+export const config = {
+    api: {
+        bodyParser: false,
+    },
+};
+
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method Not Allowed' });
     }
 
     try {
-        let body = {};
-        if (req.body) {
-            body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+        const formData = await req.formData();
+        const frontPhotoFile = formData.get('frontPhoto');
+        const audioSampleFile = formData.get('audioSample');
+
+        if (!frontPhotoFile || !audioSampleFile) {
+            return res.status(400).json({ error: "Faltan archivos requeridos en el formulario." });
         }
 
-        const { frontUrl, audioUrl } = body;
+        const frontBuffer = Buffer.from(await frontPhotoFile.arrayBuffer());
+        const frontBlob = await put(`captures/front-${Date.now()}.jpg`, frontBuffer, { 
+            access: 'public',
+            token: process.env.BLOB_READ_WRITE_TOKEN
+        });
 
-        if (!frontUrl || !audioUrl) {
-            return res.status(400).json({ error: "Faltan las URLs de los archivos en la petición." });
-        }
+        const audioBuffer = Buffer.from(await audioSampleFile.arrayBuffer());
+        const ext = audioSampleFile.name?.includes('mp4') ? 'mp4' : 'webm';
+        const audioBlob = await put(`captures/audio-${Date.now()}.${ext}`, audioBuffer, { 
+            access: 'public',
+            token: process.env.BLOB_READ_WRITE_TOKEN
+        });
 
-        // Disparador automático a Fal.ai con webhook asíncrono
         const falResponse = await fetch("https://queue.fal.run/fal-ai/sadtalker", {
             method: "POST",
             headers: {
@@ -23,8 +40,8 @@ export default async function handler(req, res) {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                source_image_url: frontUrl,
-                driven_audio_url: audioUrl,
+                source_image_url: frontBlob.url,
+                driven_audio_url: audioBlob.url,
                 still: true,
                 enhancer: "gfpgan",
                 webhookUrl: "https://avatar-app-beta-snowy.vercel.app/api/webhook"
