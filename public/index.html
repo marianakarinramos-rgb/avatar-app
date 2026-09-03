@@ -210,7 +210,7 @@
             });
             video.srcObject = stream;
         } catch (err) {
-            alert("Necesitamos acceso a la cámara y micrófono.");
+            alert("Necesitamos acceso a la cámara y micrófono. Verifica los permisos del navegador.");
         }
     }
 
@@ -239,9 +239,12 @@
         } else if (currentStep === 2) {
             userAssets.profilePhoto = capturePhoto();
             currentStep = 3;
+            
+            // Bloqueo total de interfaz mientras pedimos permisos de audio
             stepTitle.innerText = "Muestra de Voz";
-            stepDesc.innerText = "Lee el texto en pantalla con tu voz natural.";
-            actionBtn.innerText = "Comenzar Grabación";
+            stepDesc.innerText = "Activando micrófono... por favor espera.";
+            actionBtn.innerText = "Cargando...";
+            actionBtn.disabled = true;
             faceGuide.style.display = 'none';
             prompter.style.display = 'block';
             document.getElementById('dot-2').classList.remove('active');
@@ -249,78 +252,90 @@
             
             await startCamera(true);
             
+            // Liberamos interfaz solo cuando el hardware está listo
+            stepDesc.innerText = "Lee el texto en pantalla con tu voz natural.";
+            actionBtn.innerText = "Comenzar Grabación";
+            actionBtn.disabled = false;
+            
         } else if (currentStep === 3) {
-            if (!mediaRecorder || mediaRecorder.state === 'inactive') {
-                audioChunks = [];
-                mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-                
-                mediaRecorder.ondataavailable = e => {
-                    if (e.data.size > 0) audioChunks.push(e.data);
-                };
-                
-                mediaRecorder.onstop = async () => {
-                    userAssets.audioSample = new Blob(audioChunks, { type: 'audio/webm' });
-                    
-                    stepTitle.innerText = "¡Subiendo Assets!";
-                    stepDesc.innerText = "Preparando datos en la nube...";
-                    actionBtn.innerText = "Procesando...";
-                    actionBtn.disabled = true;
-                    video.style.opacity = '0.3';
-                    prompter.style.display = 'none';
-
-                    try {
-                        const frontRes = await fetch(userAssets.frontPhoto);
-                        const frontBlob = await frontRes.blob();
-                        
-                        const formData = new FormData();
-                        formData.append('frontPhoto', frontBlob, 'front.jpg');
-                        formData.append('audioSample', userAssets.audioSample, 'voice.webm');
-
-                        const response = await fetch('/api/generate-avatar', {
-                            method: 'POST',
-                            body: formData
-                        });
-
-                        const result = await response.json();
-
-                        if (response.ok && result.success) {
-                            headerSection.style.display = 'none';
-                            controlsSection.style.display = 'none';
-                            video.style.display = 'none';
-                            successScreen.style.display = 'flex';
-                            
-                            if (stream) {
-                                stream.getTracks().forEach(track => track.stop());
-                            }
-                        } else {
-                            throw new Error(result.error || "Error en el servidor");
-                        }
-                    } catch (error) {
-                        alert("Fallo el proceso: " + error.message);
-                        stepTitle.innerText = "Error";
-                        stepDesc.innerText = "Hubo un problema de conexión.";
-                        actionBtn.innerText = "Reintentar";
-                        actionBtn.disabled = false;
-                        video.style.opacity = '1';
-                    }
-                };
-
-                mediaRecorder.start();
-                actionBtn.innerText = "Grabando... (Espera)";
-                actionBtn.classList.add('recording');
-                actionBtn.disabled = true; 
-                stepDesc.innerText = "Grabando... lee el texto en voz alta y presiona detener.";
-                
-                // Forzamos 2 segundos de grabación mínima para evitar envíos en blanco
-                setTimeout(() => {
-                    actionBtn.innerText = "Detener Grabación";
-                    actionBtn.disabled = false;
-                }, 2000);
-                
-            } else {
-                mediaRecorder.stop();
-                actionBtn.classList.remove('recording');
+            currentStep = 4; // Avanzamos al paso de detención
+            audioChunks = [];
+            
+            // Fallback técnico: Si webm no está soportado, usamos mp4
+            let options = { mimeType: 'audio/webm' };
+            if (!MediaRecorder.isTypeSupported('audio/webm')) {
+                options = { mimeType: 'audio/mp4' }; 
             }
+            
+            mediaRecorder = new MediaRecorder(stream, options);
+            
+            mediaRecorder.ondataavailable = e => {
+                if (e.data.size > 0) audioChunks.push(e.data);
+            };
+            
+            mediaRecorder.onstop = async () => {
+                const mime = options.mimeType;
+                userAssets.audioSample = new Blob(audioChunks, { type: mime });
+                
+                stepTitle.innerText = "¡Subiendo Assets!";
+                stepDesc.innerText = "Preparando datos en la nube...";
+                actionBtn.innerText = "Procesando...";
+                actionBtn.disabled = true;
+                video.style.opacity = '0.3';
+                prompter.style.display = 'none';
+
+                try {
+                    const frontRes = await fetch(userAssets.frontPhoto);
+                    const frontBlob = await frontRes.blob();
+                    
+                    const formData = new FormData();
+                    formData.append('frontPhoto', frontBlob, 'front.jpg');
+                    const extension = mime.includes('mp4') ? 'mp4' : 'webm';
+                    formData.append('audioSample', userAssets.audioSample, `voice.${extension}`);
+
+                    const response = await fetch('/api/generate-avatar', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok && result.success) {
+                        headerSection.style.display = 'none';
+                        controlsSection.style.display = 'none';
+                        video.style.display = 'none';
+                        successScreen.style.display = 'flex';
+                        
+                        if (stream) {
+                            stream.getTracks().forEach(track => track.stop());
+                        }
+                    } else {
+                        throw new Error(result.error || "Error en el servidor");
+                    }
+                } catch (error) {
+                    alert("Fallo el proceso: " + error.message);
+                    stepTitle.innerText = "Error";
+                    stepDesc.innerText = "Hubo un problema de conexión.";
+                    actionBtn.innerText = "Reintentar";
+                    actionBtn.disabled = false;
+                    video.style.opacity = '1';
+                }
+            };
+
+            mediaRecorder.start();
+            actionBtn.innerText = "Grabando... (Espera)";
+            actionBtn.classList.add('recording');
+            actionBtn.disabled = true; 
+            stepDesc.innerText = "Grabando... lee el texto en voz alta y presiona detener.";
+            
+            setTimeout(() => {
+                actionBtn.innerText = "Detener Grabación";
+                actionBtn.disabled = false;
+            }, 2000);
+            
+        } else if (currentStep === 4) {
+            mediaRecorder.stop();
+            actionBtn.classList.remove('recording');
         }
     });
 
