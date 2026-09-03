@@ -1,31 +1,34 @@
 import { put } from "@vercel/blob";
 
 export default async function handler(req, res) {
-    // Solo aceptamos llamadas POST (que es como Fal.ai envía los datos)
-    if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method Not Allowed' });
+    }
 
     try {
         const data = req.body;
+        console.log("Webhook recibido de Fal.ai:", JSON.stringify(data));
 
-        // Verificamos que Fal.ai haya terminado bien y nos traiga la URL del video
-        if (data.status === "OK" && data.payload && data.payload.video_url) {
-            const videoUrl = data.payload.video_url;
-            
-            // Creamos un archivo de texto en tu Storage con el link del MP4 listo
-            const fileName = `final-avatars/avatar-listo-${Date.now()}.txt`;
-            await put(fileName, `¡Acá está tu video terminado!\n\nLink directo: ${videoUrl}`, { 
+        // Verificamos si el video ya está listo
+        const videoUrl = data?.payload?.video?.url || data?.video?.url;
+
+        if (videoUrl) {
+            // Descargamos el video generado por la IA
+            const videoRes = await fetch(videoUrl);
+            const videoBuffer = await videoRes.arrayBuffer();
+
+            // Lo guardamos de manera definitiva en tu Vercel Blob en una carpeta propia
+            const savedBlob = await put(`final-avatars/video-${Date.now()}.mp4`, Buffer.from(videoBuffer), {
                 access: 'public',
                 token: process.env.BLOB_READ_WRITE_TOKEN
             });
 
-            console.log("Avatar recibido y guardado con éxito.");
+            console.log("¡Video guardado con éxito en Vercel Blob!", savedBlob.url);
         }
 
-        // Le respondemos rápido a Fal.ai con un 200 OK para que sepa que recibimos el paquete
         return res.status(200).json({ received: true });
-
     } catch (error) {
-        console.error("Error procesando el webhook:", error);
-        return res.status(500).json({ error: "Fallo en el servidor del webhook" });
+        console.error("Error en el webhook:", error);
+        return res.status(500).json({ error: error.message });
     }
 }
