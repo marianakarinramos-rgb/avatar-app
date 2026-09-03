@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -47,10 +46,9 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transform: scaleX(-1); /* Efecto espejo */
+            transform: scaleX(-1);
         }
 
-        /* Guía visual para la cara */
         .face-guide {
             position: absolute;
             top: 50%;
@@ -60,7 +58,7 @@
             height: 350px;
             border: 2px dashed rgba(255, 255, 255, 0.7);
             border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
-            box-shadow: 0 0 0 4000px rgba(0,0,0,0.5); /* Oscurece el exterior */
+            box-shadow: 0 0 0 4000px rgba(0,0,0,0.5);
             pointer-events: none;
             transition: all 0.3s ease;
         }
@@ -70,7 +68,6 @@
             border-radius: 40% 60% 60% 40% / 50% 50% 50% 50%;
         }
 
-        /* Prompter para audio */
         .prompter {
             display: none;
             position: absolute;
@@ -109,7 +106,8 @@
             width: 100%;
         }
         
-        .btn:active { opacity: 0.8; }
+        .btn:disabled { background: #98a2b3; cursor: not-allowed; }
+        .btn:active:not(:disabled) { opacity: 0.8; }
         .btn.recording { background: #d92d20; animation: pulse 1.5s infinite; }
 
         @keyframes pulse {
@@ -118,7 +116,6 @@
             100% { box-shadow: 0 0 0 0 rgba(217, 45, 32, 0); }
         }
 
-        /* Pantallas de estado */
         .step-indicator {
             display: flex;
             justify-content: center;
@@ -137,7 +134,7 @@
         <p id="step-desc">Alinea tu rostro dentro de la guía y mira a la cámara.</p>
     </div>
 
-    <div class="viewport-container">
+    <div class="viewport-container" id="video-container">
         <video id="camera-feed" autoplay playsinline></video>
         <div id="face-guide" class="face-guide"></div>
         <div id="prompter" class="prompter">"Hola, estoy creando mi avatar inteligente. Me aseguro de hablar con un tono natural y pausas relajadas."</div>
@@ -145,7 +142,7 @@
 
     <div class="controls">
         <button id="main-action-btn" class="btn">Tomar Foto Frontal</button>
-        <div class="step-indicator">
+        <div class="step-indicator" id="stepper">
             <div class="dot active" id="dot-1"></div>
             <div class="dot" id="dot-2"></div>
             <div class="dot" id="dot-3"></div>
@@ -160,52 +157,48 @@
     const stepDesc = document.getElementById('step-desc');
     const faceGuide = document.getElementById('face-guide');
     const prompter = document.getElementById('prompter');
+    const videoContainer = document.getElementById('video-container');
+    const stepper = document.getElementById('stepper');
     
     let currentStep = 1;
     let stream = null;
     let mediaRecorder = null;
     let audioChunks = [];
 
-    // Almacenamiento temporal de los assets
     const userAssets = {
         frontPhoto: null,
         profilePhoto: null,
         audioSample: null
     };
 
-    // Inicializar Cámara
     async function startCamera(audio = false) {
         try {
             if (stream) {
                 stream.getTracks().forEach(track => track.stop());
             }
             stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: "user", width: { ideal: 1080 }, height: { ideal: 1920 } },
+                video: { facingMode: "user", width: { ideal: 720 }, height: { ideal: 1280 } },
                 audio: audio
             });
             video.srcObject = stream;
         } catch (err) {
-            alert("Necesitamos acceso a la cámara y micrófono para crear tu avatar.");
+            alert("Necesitamos acceso a la cámara y micrófono.");
         }
     }
 
-    // Capturar frame del video
     function capturePhoto() {
         const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
+        canvas.width = 720;
+        canvas.height = 1280;
         const ctx = canvas.getContext('2d');
-        // Mantener el efecto espejo en la captura
         ctx.translate(canvas.width, 0);
         ctx.scale(-1, 1);
-        ctx.drawImage(video, 0, 0);
-        return canvas.toDataURL('image/jpeg', 0.9);
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        return canvas.toDataURL('image/jpeg', 0.8); // Comprimido para evitar sobrecargar la red
     }
 
-    // Máquina de estados del flujo de UX
     actionBtn.addEventListener('click', async () => {
         if (currentStep === 1) {
-            // Guardar foto frontal y pasar a perfil
             userAssets.frontPhoto = capturePhoto();
             currentStep = 2;
             stepTitle.innerText = "Foto de Perfil";
@@ -216,7 +209,6 @@
             document.getElementById('dot-2').classList.add('active');
             
         } else if (currentStep === 2) {
-            // Guardar foto perfil y preparar audio
             userAssets.profilePhoto = capturePhoto();
             currentStep = 3;
             stepTitle.innerText = "Muestra de Voz";
@@ -227,35 +219,80 @@
             document.getElementById('dot-2').classList.remove('active');
             document.getElementById('dot-3').classList.add('active');
             
-            // Reiniciar stream con audio
             await startCamera(true);
             
         } else if (currentStep === 3) {
-            // Lógica de grabación de audio
             if (!mediaRecorder || mediaRecorder.state === 'inactive') {
                 audioChunks = [];
-                mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
                 
                 mediaRecorder.ondataavailable = e => {
                     if (e.data.size > 0) audioChunks.push(e.data);
                 };
                 
-                mediaRecorder.onstop = () => {
+                mediaRecorder.onstop = async () => {
                     userAssets.audioSample = new Blob(audioChunks, { type: 'audio/webm' });
-                    // AQUÍ IRÍA EL FETCH POST A TU BACKEND / API
-                    console.log("Assets recolectados listos para enviar:", userAssets);
-                    stepTitle.innerText = "¡Listo!";
-                    stepDesc.innerText = "Procesando tu avatar. Esto puede tardar unos minutos.";
-                    actionBtn.innerText = "Creando Avatar...";
+                    
+                    stepTitle.innerText = "¡Procesando!";
+                    stepDesc.innerText = "Enviando datos al servidor...";
+                    actionBtn.innerText = "Generando...";
                     actionBtn.disabled = true;
-                    video.style.opacity = '0.5';
+                    video.style.opacity = '0.3';
                     prompter.style.display = 'none';
+
+                    try {
+                        const frontRes = await fetch(userAssets.frontPhoto);
+                        const frontBlob = await frontRes.blob();
+                        
+                        const formData = new FormData();
+                        formData.append('frontPhoto', frontBlob, 'front.jpg');
+                        formData.append('audioSample', userAssets.audioSample, 'voice.webm');
+                        formData.append('textToSpeak', 'Hola, soy tu nuevo avatar con inteligencia artificial.');
+
+                        stepDesc.innerText = "Creando voz y animando rostro en la nube...";
+
+                        const response = await fetch('/api/generate-avatar', {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        const result = await response.json();
+
+                        if (response.ok && result.success) {
+                            videoContainer.innerHTML = `
+                                <video src="${result.video_url}" controls autoplay playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+                            `;
+                            stepTitle.innerText = "¡Avatar Listo!";
+                            stepDesc.innerText = "Tu video se ha generado con éxito.";
+                            actionBtn.innerText = "Descargar Video";
+                            actionBtn.disabled = false;
+                            stepper.style.display = 'none';
+                            
+                            actionBtn.onclick = () => {
+                                const a = document.createElement('a');
+                                a.href = result.video_url;
+                                a.download = 'avatar-inteligente.mp4';
+                                document.body.appendChild(a);
+                                a.click();
+                                document.body.removeChild(a);
+                            };
+                        } else {
+                            throw new Error(result.error || "Error desconocido en el servidor");
+                        }
+                    } catch (error) {
+                        alert("Fallo el proceso: " + error.message);
+                        stepTitle.innerText = "Error";
+                        stepDesc.innerText = "Hubo un problema al generar el avatar.";
+                        actionBtn.innerText = "Reintentar";
+                        actionBtn.disabled = false;
+                        video.style.opacity = '1';
+                    }
                 };
 
                 mediaRecorder.start();
                 actionBtn.innerText = "Detener Grabación";
                 actionBtn.classList.add('recording');
-                stepDesc.innerText = "Grabando... lee el texto en voz alta.";
+                stepDesc.innerText = "Grabando... lee el texto en voz alta y presiona detener.";
             } else {
                 mediaRecorder.stop();
                 actionBtn.classList.remove('recording');
@@ -263,9 +300,7 @@
         }
     });
 
-    // Iniciar app
     startCamera();
 </script>
-
 </body>
 </html>
