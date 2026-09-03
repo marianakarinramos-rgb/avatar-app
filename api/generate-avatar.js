@@ -1,7 +1,6 @@
 import { put } from '@vercel/blob';
 import multiparty from 'multiparty';
 import fetch from 'node-fetch';
-import FormData from 'form-data';
 import fs from 'fs';
 
 export const config = {
@@ -24,13 +23,12 @@ export default async function handler(req, res) {
             });
         });
 
-        if (!files || !files.audioSample || !files.frontPhoto) {
-            throw new Error("No llegaron los archivos de audio o foto al servidor.");
+        if (!files || !files.frontPhoto) {
+            throw new Error("No llegó la foto frontal al servidor.");
         }
 
-        const audioFile = files.audioSample[0];
         const frontPhotoFile = files.frontPhoto[0];
-        const textToSpeak = fields.textToSpeak ? fields.textToSpeak[0] : "Hola, soy tu avatar.";
+        const textToSpeak = fields.textToSpeak ? fields.textToSpeak[0] : "Hola, este es mi avatar inteligente.";
         
         console.log("1. Subiendo foto a Vercel Blob...");
         const blobPhoto = await put(`avatars/front-${Date.now()}.jpg`, fs.readFileSync(frontPhotoFile.path), {
@@ -38,24 +36,9 @@ export default async function handler(req, res) {
             token: process.env.BLOB_READ_WRITE_TOKEN
         });
 
-        console.log("2. Clonando voz en ElevenLabs...");
-        const elevenLabsForm = new FormData();
-        elevenLabsForm.append('name', `Clone_${Date.now()}`);
-        elevenLabsForm.append('files', fs.createReadStream(audioFile.path));
-        
-        const cloneResponse = await fetch('https://api.elevenlabs.io/v1/voices/add', {
-            method: 'POST',
-            headers: { 'xi-api-key': process.env.ELEVENLABS_API_KEY },
-            body: elevenLabsForm
-        });
-        
-        const cloneData = await cloneResponse.json();
-        if (!cloneResponse.ok || !cloneData.voice_id) {
-            throw new Error("Error en ElevenLabs al clonar voz: " + JSON.stringify(cloneData));
-        }
-        const voiceId = cloneData.voice_id;
-
-        console.log("3. Generando audio tts en ElevenLabs...");
+        console.log("2. Generando audio con ElevenLabs...");
+        // Usamos una voz estándar de ElevenLabs (Rachel) para garantizar estabilidad en el MVP
+        const voiceId = "21m00Tcm4TlvDq8ikWAM"; 
         const ttsResponse = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
             method: 'POST',
             headers: {
@@ -76,13 +59,13 @@ export default async function handler(req, res) {
 
         const audioBuffer = Buffer.from(await ttsResponse.arrayBuffer());
         
-        console.log("4. Subiendo audio final a Vercel Blob...");
+        console.log("3. Subiendo audio a Vercel Blob...");
         const blobAudio = await put(`avatars/speech-${Date.now()}.mp3`, audioBuffer, {
             access: 'public',
             token: process.env.BLOB_READ_WRITE_TOKEN
         });
 
-        console.log("5. Llamando a Fal.ai para animación...");
+        console.log("4. Llamando a Fal.ai para animación...");
         const animationResponse = await fetch('https://fal.run/fal-ai/sync-lips', {
             method: 'POST',
             headers: {
