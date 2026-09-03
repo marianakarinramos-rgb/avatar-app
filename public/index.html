@@ -68,7 +68,7 @@
                 <button onclick="applyMagicCommand('/meme')" class="magic-btn">😂 /meme</button>
             </div>
 
-            <textarea id="aiPrompt" placeholder="Tocá un comando arriba o escribí tu idea libre..." class="w-full h-16 bg-slate-950 border border-slate-700 p-3 rounded-xl text-sm text-white outline-none resize-none focus:border-sky-500"></textarea>
+            <textarea id="aiPrompt" placeholder="Tocá un comando arriba o agregá detalles (Ej: /sellwithoutselling Enfocado en peluquerías)" class="w-full h-16 bg-slate-950 border border-slate-700 p-3 rounded-xl text-sm text-white outline-none resize-none focus:border-sky-500"></textarea>
             
             <button id="generateBtn" onclick="generateWithAI()" class="w-full mt-3 bg-gradient-to-r from-sky-500 to-indigo-500 text-white font-bold p-3 rounded-xl shadow-lg shadow-sky-500/20 flex justify-center items-center gap-2 hover:from-sky-400 hover:to-indigo-400">
                 <span id="btnText">✨ 2. Aplicar Magia (IA)</span>
@@ -92,7 +92,6 @@
     </div>
 
 <script>
-    // Limpiar modelos viejos
     let savedModel = localStorage.getItem('gesto_gemini_model');
     if (savedModel && !savedModel.includes('3.6')) {
         savedModel = 'gemini-3.6-flash';
@@ -116,11 +115,14 @@
         toggleConfig();
     }
 
+    // CONTEXTO CENTRAL DEL PRODUCTO (Para que la IA sepa qué vende)
+    const PRODUCT_CONTEXT = `CONTEXTO OBLIGATORIO DEL PRODUCTO: Estás creando publicidad para "Gesto Smart". Es un software web de gestión, ventas y control de stock ultra ágil, diseñado específicamente para dueños de comercios minoristas y mayoristas que quieren evitar las fricciones e interfaces complejas. Permite calcular precios rápido, manejar el inventario y se ve perfecto tanto en PC como en celulares.`;
+
     const magicPrompts = {
-        '/scrollstopper': "OBJETIVO: Frenar el scroll. TEXTO GIGANTE Y AGRESIVO. Crea un gancho superior corto y polémico que genere curiosidad. El CTA inferior debe incitar a la acción. Oscurece la imagen (0.6) para alto contraste. Usa fuente Bebas Neue o Impact.",
-        '/premiumshowcase': "OBJETIVO: Percepción de alto valor/lujo. Crea un copy elegante, minimalista y aspiracional. Oscurece la foto moderadamente (0.4). Usa fuente Playfair Display o Cinzel.",
-        '/sellwithoutselling': "OBJETIVO: Vender aportando valor. Crea un gancho superior empático (ej: 'El 80% de los negocios pierden dinero en...'). El CTA abajo debe invitar a resolverlo. Usa fuente Montserrat. Oscurece poco (0.3).",
-        '/meme': "OBJETIVO: Humor e identificación. Crea un gancho superior estilo 'Cuando...' sobre un problema común. El CTA abajo debe ser sarcástico. Usa fuente Montserrat y oscurece poco."
+        '/scrollstopper': "OBJETIVO: Frenar el scroll. Crea un gancho superior muy corto y polémico sobre la pérdida de tiempo o dinero por desorganización. El CTA inferior debe invitar a usar Gesto Smart. Usa un nivel de oscurecimiento bajo (0.3). Usa fuente Bebas Neue.",
+        '/premiumshowcase': "OBJETIVO: Percepción de alto valor. Escribe un copy elegante que asocie Gesto Smart con negocios de primer nivel y control absoluto. Usa un nivel de oscurecimiento suave (0.2) para que se vea la interfaz detrás. Usa fuente Playfair Display.",
+        '/sellwithoutselling': "OBJETIVO: Vender aportando valor. Crea un gancho superior empático sobre el dolor de controlar el stock a mano o usar sistemas viejos. El CTA debe ofrecer Gesto Smart como la salida ágil. Oscurece MUY poco (0.2). Usa fuente Montserrat.",
+        '/meme': "OBJETIVO: Humor e identificación. Gancho superior estilo 'POV: Cuando tienes que actualizar precios uno por uno...'. CTA abajo: 'Mejor pasate a Gesto Smart'. Nivel de oscurecimiento muy leve (0.2). Usa fuente Montserrat."
     };
 
     function applyMagicCommand(command) {
@@ -196,23 +198,27 @@
         } else {
             const possibleCommand = Object.keys(magicPrompts).find(cmd => userInput.startsWith(cmd));
             if(possibleCommand){
-                hiddenContext = magicPrompts[possibleCommand] + " Detalle extra: " + userInput.replace(possibleCommand, "");
+                hiddenContext = magicPrompts[possibleCommand] + " REQUERIMIENTO EXTRA DEL USUARIO: " + userInput.replace(possibleCommand, "");
             } else {
-                hiddenContext = "Sigue las instrucciones textuales: " + userInput;
+                hiddenContext = "Sigue las instrucciones textuales del usuario: " + userInput;
             }
         }
 
-        const systemInstructions = `Eres un Director de Arte y Copywriter. ESTRATEGIA: ${hiddenContext}
-        Devuelve ÚNICAMENTE un objeto JSON válido, SIN formato markdown ni explicaciones.
+        const systemInstructions = `Eres un Director de Arte y Copywriter Senior en tecnología B2B. 
+        ${PRODUCT_CONTEXT}
+        
+        ESTRATEGIA PARA ESTE DISEÑO: ${hiddenContext}
+        
+        Devuelve ÚNICAMENTE un objeto JSON válido, SIN markdown.
         JSON Requerido:
         {
             "ganchoSuperior": "Texto de impacto arriba",
             "llamadaInferior": "Texto de CTA abajo",
             "tipografia": "Bebas Neue", 
             "colorTexto": "#FFFFFF", 
-            "nivelOscurecimiento": 0.5 
+            "nivelOscurecimiento": 0.2
         }
-        Opciones de tipografia: Bebas Neue, Playfair Display, Montserrat, Cinzel.`;
+        Importante: nivelOscurecimiento debe ser un número entre 0.1 y 0.4 como MÁXIMO absoluto, para que se vea la interfaz del software detrás.`;
 
         const preferredModel = localStorage.getItem('gesto_gemini_model') || 'gemini-3.6-flash';
         const modelsToTry = [...new Set([preferredModel, 'gemini-3.6-flash', 'gemini-3.6-pro'])];
@@ -281,7 +287,7 @@
     }
 
     function aplicarDisenoIA(config) {
-        renderBaseImage(config.nivelOscurecimiento || 0.4);
+        renderBaseImage(config.nivelOscurecimiento || 0.2);
 
         const textTop = new fabric.Textbox((config.ganchoSuperior || "").toUpperCase(), {
             left: 540, top: 200,
@@ -299,12 +305,12 @@
             left: 540, top: 1600,
             originX: 'center', originY: 'bottom',
             width: 900,
-            fontSize: 55,
+            fontSize: 50,
             fontFamily: 'Montserrat', 
-            fontWeight: 'normal',
+            fontWeight: 'bold',
             fill: '#ffffff',
             textAlign: 'center',
-            backgroundColor: 'rgba(0,0,0,0.7)',
+            backgroundColor: 'rgba(0,0,0,0.85)',
             padding: 20,
             shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.5)', blur: 10 })
         });
