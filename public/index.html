@@ -77,11 +77,11 @@
             outline: none;
         }
 
-        /* Vista Previa 9:16 Pantalla Completa sin espacios negros */
+        /* Vista Previa 9:16 Profesional con Fondo Difuminado Automático */
         .preview-container {
             width: 100%;
             aspect-ratio: 9 / 16;
-            background: #000;
+            background: #0b0f19;
             border-radius: 12px;
             display: flex;
             flex-direction: column;
@@ -93,24 +93,49 @@
             border: 1px solid var(--border);
         }
 
-        /* Imagen de fondo que llena el 100% de la pantalla sin franjas */
-        .preview-bg-media {
+        /* Fondo difuminado automático para rellenar el formato 9:16 sin cortar la imagen principal */
+        .preview-bg-blur {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             object-fit: cover;
+            filter: blur(20px) brightness(0.4);
+            transform: scale(1.1);
             z-index: 1;
             display: none;
+        }
+
+        /* Imagen principal intacta y centrada */
+        .media-wrapper {
+            width: 100%;
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            margin: 6px 0;
+            z-index: 2;
+            overflow: hidden;
+        }
+
+        .preview-main-img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 6px;
+            display: none;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.8);
         }
 
         .preview-bg-video {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
+            width: 100%;
+            height: 100%;
             object-fit: cover;
-            z-index: 1;
+            border-radius: 6px;
             display: none;
+            z-index: 2;
         }
 
-        /* Tarjetas de texto flotantes sobre la imagen */
+        /* Tarjetas de texto */
         .story-text-card {
             width: 100%;
             padding: 10px 14px;
@@ -120,13 +145,13 @@
         }
 
         .style-classic {
-            background: rgba(11, 15, 25, 0.88);
+            background: rgba(11, 15, 25, 0.9);
             backdrop-filter: blur(6px);
             border: 1px solid rgba(56, 189, 248, 0.3);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
         .style-neon {
-            background: rgba(15, 23, 42, 0.92);
+            background: rgba(15, 23, 42, 0.95);
             border: 2px solid var(--primary);
             box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
         }
@@ -188,18 +213,18 @@
 <div class="app-container">
     <div class="header">
         <h1>Gesto Smart • IG Story Studio</h1>
-        <p>Pantalla completa real sin espacios vacíos.</p>
+        <p>Tu imagen entera con fondo difuminado pro.</p>
     </div>
 
     <div class="content-body">
         <div class="form-group">
             <label>📝 Texto Superior (Dejar vacío si no se usa)</label>
-            <textarea id="input-main" placeholder="¿Cuánto tardás en hacer el catálogo? 😳">¿Cuánto tardás en hacer el catálogo? 😳</textarea>
+            <textarea id="input-main" placeholder="¿Cuánto tardás en hacer el catálogo? 😳"></textarea>
         </div>
 
         <div class="form-group">
             <label>💬 Texto Inferior (Dejar vacío si no se usa)</label>
-            <textarea id="input-sub" placeholder="Subí un excel y la magia ocurre sola 🚀"></textarea>
+            <textarea id="input-sub" placeholder="Subí un excel y la magia ocurre sola 🚀">Y si te digo que en una app podés controlar todo? 🚀</textarea>
         </div>
 
         <div class="row-options">
@@ -225,19 +250,24 @@
         <div class="form-group">
             <label>Vista Previa Interactiva</label>
             <div id="preview-box" class="preview-container">
-                <!-- Imagen de fondo a pantalla completa -->
-                <img id="bg-image" class="preview-bg-media" alt="Fondo">
-                <video id="bg-video" class="preview-bg-video" autoplay muted loop playsinline></video>
+                <!-- Fondo difuminado automático -->
+                <img id="bg-blur-img" class="preview-bg-blur" alt="Blur Background">
 
                 <!-- Bloque Superior -->
-                <div id="box-main" class="story-text-card style-classic">
-                    <p id="text-main" class="story-text-content" style="color: #ffffff;">¿Cuánto tardás en hacer el catálogo? 😳</p>
+                <div id="box-main" class="story-text-card style-classic" style="display: none;">
+                    <p id="text-main" class="story-text-content" style="color: #ffffff;"></p>
+                </div>
+
+                <!-- Imagen Principal Intacta -->
+                <div class="media-wrapper">
+                    <img id="main-img" class="preview-main-img" alt="Main Image">
+                    <video id="bg-video" class="preview-bg-video" autoplay muted loop playsinline></video>
                 </div>
 
                 <!-- Bloque Inferior + Sello -->
                 <div style="width: 100%; display: flex; flex-direction: column; gap: 6px; z-index: 10;">
-                    <div id="box-sub" class="story-text-card style-classic" style="display: none;">
-                        <p id="text-sub" class="story-text-content" style="color: #ffffff;"></p>
+                    <div id="box-sub" class="story-text-card style-classic">
+                        <p id="text-sub" class="story-text-content" style="color: #ffffff;">Y si te digo que en una app podés controlar todo? 🚀</p>
                     </div>
                     <div class="story-footer">
                         <div class="ig-sticker">gestosmart.app</div>
@@ -262,7 +292,8 @@
     const cardStyleSelect = document.getElementById('card-style-select');
     const textColorPicker = document.getElementById('text-color-picker');
     const mediaFileInput = document.getElementById('media-file-input');
-    const bgImage = document.getElementById('bg-image');
+    const bgBlurImg = document.getElementById('bg-blur-img');
+    const mainImg = document.getElementById('main-img');
     const bgVideo = document.getElementById('bg-video');
     const previewBox = document.getElementById('preview-box');
     const downloadPlateBtn = document.getElementById('download-plate-btn');
@@ -276,9 +307,6 @@
         textSub.innerText = e.target.value;
         boxSub.style.display = e.target.value.trim() ? 'block' : 'none';
     });
-
-    // Inicializar estado de las cajas según texto por defecto
-    boxSub.style.display = 'none';
 
     cardStyleSelect.addEventListener('change', (e) => {
         boxMain.className = `story-text-card ${e.target.value}`;
@@ -296,14 +324,17 @@
         const fileURL = URL.createObjectURL(file);
 
         if (file.type.startsWith('video')) {
-            bgImage.style.display = 'none';
+            bgBlurImg.style.display = 'none';
+            mainImg.style.display = 'none';
             bgVideo.src = fileURL;
             bgVideo.style.display = 'block';
             bgVideo.play();
         } else {
             bgVideo.style.display = 'none';
-            bgImage.src = fileURL;
-            bgImage.style.display = 'block';
+            bgBlurImg.src = fileURL;
+            bgBlurImg.style.display = 'block';
+            mainImg.src = fileURL;
+            mainImg.style.display = 'block';
         }
     });
 
