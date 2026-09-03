@@ -156,7 +156,7 @@
     </div>
 
     <div class="viewport-container" id="video-container">
-        <video id="camera-feed" autoplay playsinline></video>
+        <video id="camera-feed" autoplay playsinline muted></video>
         <div id="face-guide" class="face-guide"></div>
         <div id="prompter" class="prompter">"Hola, estoy creando mi avatar inteligente. Me aseguro de hablar con un tono natural y pausas relajadas."</div>
         
@@ -195,18 +195,15 @@
 
     const userAssets = {
         frontPhoto: null,
-        profilePhoto: null,
         audioSample: null
     };
 
-    async function startCamera(audio = false) {
+    // Pedimos cámara y micrófono desde el arranque para evitar cuellos de botella
+    async function startCamera() {
         try {
-            if (stream) {
-                stream.getTracks().forEach(track => track.stop());
-            }
             stream = await navigator.mediaDevices.getUserMedia({
                 video: { facingMode: "user", width: { ideal: 720 }, height: { ideal: 1280 } },
-                audio: audio
+                audio: true 
             });
             video.srcObject = stream;
         } catch (err) {
@@ -237,31 +234,20 @@
             document.getElementById('dot-2').classList.add('active');
             
         } else if (currentStep === 2) {
-            userAssets.profilePhoto = capturePhoto();
+            // Ya no tomamos foto de perfil en el objeto porque SadTalker solo usa la frontal, aceleramos el proceso
             currentStep = 3;
-            
-            // Bloqueo total de interfaz mientras pedimos permisos de audio
             stepTitle.innerText = "Muestra de Voz";
-            stepDesc.innerText = "Activando micrófono... por favor espera.";
-            actionBtn.innerText = "Cargando...";
-            actionBtn.disabled = true;
+            stepDesc.innerText = "Lee el texto en pantalla con tu voz natural.";
+            actionBtn.innerText = "Comenzar Grabación";
             faceGuide.style.display = 'none';
             prompter.style.display = 'block';
             document.getElementById('dot-2').classList.remove('active');
             document.getElementById('dot-3').classList.add('active');
             
-            await startCamera(true);
-            
-            // Liberamos interfaz solo cuando el hardware está listo
-            stepDesc.innerText = "Lee el texto en pantalla con tu voz natural.";
-            actionBtn.innerText = "Comenzar Grabación";
-            actionBtn.disabled = false;
-            
         } else if (currentStep === 3) {
-            currentStep = 4; // Avanzamos al paso de detención
+            currentStep = 4;
             audioChunks = [];
             
-            // Fallback técnico: Si webm no está soportado, usamos mp4
             let options = { mimeType: 'audio/webm' };
             if (!MediaRecorder.isTypeSupported('audio/webm')) {
                 options = { mimeType: 'audio/mp4' }; 
