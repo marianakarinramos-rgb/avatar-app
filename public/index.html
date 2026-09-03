@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gesto Smart • Creador Pro Redes</title>
+    <title>Gesto Smart • IG Story Studio</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
@@ -16,7 +16,7 @@
             --border: #334155;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 12px; }
+        body { background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 10px; }
         
         .app-container {
             background: var(--surface);
@@ -26,29 +26,28 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
             border: 1px solid var(--border);
         }
 
-        .header { padding: 14px; text-align: center; border-bottom: 1px solid var(--border); background: #0f172a; }
+        .header { padding: 12px; text-align: center; border-bottom: 1px solid var(--border); background: #0f172a; }
         .header h1 { font-size: 15px; font-weight: 700; color: var(--primary); margin-bottom: 2px; }
         .header p { font-size: 11px; color: var(--text-muted); }
 
         .content-body {
-            padding: 14px;
+            padding: 12px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            max-height: 80vh;
+            gap: 10px;
+            max-height: 78vh;
             overflow-y: auto;
         }
 
         .form-group { display: flex; flex-direction: column; gap: 4px; }
-        label { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+        label { font-size: 11px; font-weight: 600; color: var(--text-muted); }
 
-        textarea {
+        textarea, input[type="text"] {
             width: 100%;
-            height: 60px;
             padding: 8px;
             border: 1px solid var(--border);
             border-radius: 8px;
@@ -58,7 +57,7 @@
             resize: none;
             outline: none;
         }
-        textarea:focus { border-color: var(--primary); }
+        textarea:focus, input[type="text"]:focus { border-color: var(--primary); }
 
         .row-options {
             display: grid;
@@ -68,118 +67,117 @@
 
         select, input[type="file"], input[type="color"] {
             width: 100%;
-            padding: 8px;
+            padding: 7px;
             background: #0f172a;
             border: 1px solid var(--border);
             border-radius: 6px;
             color: white;
-            font-size: 12px;
+            font-size: 11px;
             outline: none;
         }
 
-        .toggle-btn {
+        .action-btn {
             background: #0f172a;
             border: 1px solid var(--border);
             color: var(--text-muted);
-            padding: 8px;
+            padding: 7px;
             border-radius: 6px;
             font-size: 11px;
             font-weight: 600;
             cursor: pointer;
             text-align: center;
         }
-        .toggle-btn.active {
+        .action-btn.active {
             background: var(--primary);
             color: #0b0f19;
             border-color: var(--primary);
         }
 
-        /* Contenedor 9:16 profesional con efecto blur automático */
+        /* Lienzo Estilo Historia de Instagram (9:16 impecable) */
         .preview-container {
             width: 100%;
             aspect-ratio: 9 / 16;
-            background: #0b0f19;
+            background: #000;
             border-radius: 12px;
             display: flex;
             position: relative;
             overflow: hidden;
             border: 1px solid var(--border);
-            justify-content: center;
-            align-items: center;
         }
 
-        /* Fondo difuminado automático para llenar el espacio sin deformar nada */
-        .preview-bg-blur {
+        .preview-bg-media {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            object-fit: cover;
-            filter: blur(16px) brightness(0.5);
-            transform: scale(1.1);
+            object-fit: contain; /* Muestra la captura completa sin deformarla ni cortarla */
+            background: #000;
             z-index: 1;
             display: none;
         }
 
-        /* Imagen principal intacta y centrada */
-        .preview-main-img {
-            position: relative;
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-            z-index: 2;
-            display: none;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-        }
-
-        /* Video de fondo si se sube un video */
         .preview-bg-video {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             object-fit: cover;
-            z-index: 2;
+            z-index: 1;
             display: none;
         }
 
-        .preview-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.2);
-            z-index: 3;
-        }
-
-        /* Cajas de texto independientes */
-        .preview-text-box {
+        /* Elementos de texto flotantes interactivos (Estilo IG con arrastre visual simulado por botones) */
+        .ig-text-element {
             position: absolute;
             width: 90%;
             left: 5%;
-            z-index: 4;
+            z-index: 5;
             text-align: center;
             padding: 10px 14px;
             border-radius: 8px;
-            transition: all 0.2s ease;
+            cursor: move;
+            user-select: none;
         }
 
-        .box-top { top: 12px; }
-        .box-bottom { bottom: 12px; }
-
-        .bg-box-on {
-            background: rgba(11, 15, 25, 0.88);
-            backdrop-filter: blur(6px);
-            border: 1px solid rgba(56, 189, 248, 0.3);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+        /* Estilos de caja estilo IG */
+        .style-classic {
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
         }
-        .bg-box-off {
+        .style-neon {
+            background: rgba(15, 23, 42, 0.9);
+            border: 2px solid var(--primary);
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+        }
+        .style-raw {
             background: transparent;
-            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.95), 0 0 10px rgba(0,0,0,0.9);
+            text-shadow: 0 2px 6px rgba(0,0,0,0.95), 0 0 10px rgba(0,0,0,0.9);
         }
 
-        .preview-hook {
-            font-size: 14px;
-            line-height: 1.3;
+        .ig-text-content {
+            font-size: 15px;
+            line-height: 1.35;
             word-break: break-word;
+            font-weight: 700;
+        }
+
+        /* Stickers rápidos flotantes */
+        .ig-sticker {
+            position: absolute;
+            bottom: 20px;
+            right: 15px;
+            z-index: 6;
+            background: linear-gradient(135deg, #38bdf8, #0284c7);
+            color: #0b0f19;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            padding: 5px 12px;
+            border-radius: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            letter-spacing: 1px;
         }
 
         .controls {
-            padding: 12px 14px;
+            padding: 10px 12px;
             background: #0f172a;
             border-top: 1px solid var(--border);
             display: flex;
@@ -190,7 +188,7 @@
             background: var(--primary);
             color: #0b0f19;
             border: none;
-            padding: 12px;
+            padding: 11px;
             border-radius: 8px;
             font-size: 13px;
             font-weight: 700;
@@ -198,132 +196,134 @@
             flex: 1;
             text-align: center;
         }
-        .btn-secondary { background: var(--surface-hover); color: white; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
     <div class="header">
-        <h1>Gesto Smart • Editor Profesional</h1>
-        <p>Tus imágenes entran enteras con fondo difuminado pro.</p>
+        <h1>Gesto Smart • IG Story Studio</h1>
+        <p>Crea historias profesionales con motor visual avanzado.</p>
     </div>
 
     <div class="content-body">
         <div class="form-group">
-            <label>📝 Texto Superior (Gancho)</label>
-            <textarea id="input-top" placeholder="Ej: ¿Cuánto tardás en hacer el catálogo? 😳">¿Cuánto tardás en hacer el catálogo? 😳</textarea>
+            <label>💬 Texto Principal (Gancho con Emojis)</label>
+            <textarea id="input-main" placeholder="¿Cuánto tardás en hacer el catálogo? 😳">¿Cuánto tardás en hacer el catálogo? 😳</textarea>
         </div>
 
         <div class="form-group">
-            <label>💬 Texto Inferior (Llamado a la acción)</label>
-            <textarea id="input-bottom" placeholder="Ej: Subí un excel y la magia ocurre sola 🚀">Subí el catálogo con un simple excel y la magia se hace sola. 🚀</textarea>
+            <label>💬 Texto Secundario (CTA / Abajo)</label>
+            <textarea id="input-sub" placeholder="Subí un excel y la magia ocurre sola 🚀">Subí el catálogo con un simple excel y la magia se hace sola. 🚀</textarea>
         </div>
 
         <div class="row-options">
             <div class="form-group">
-                <label>Tipografía</label>
-                <select id="font-family-select">
-                    <option value="-apple-system, sans-serif">Moderna</option>
-                    <option value="Impact, sans-serif">Titular Fuerte (Impact)</option>
-                    <option value="'Courier New', monospace">Código</option>
+                <label>Estilo de Tarjeta</label>
+                <select id="card-style-select">
+                    <option value="style-classic">Caja Clásica IG (Oscura)</option>
+                    <option value="style-neon">Caja Neón Pro</option>
+                    <option value="style-raw">Texto Libre (Sin Caja)</option>
                 </select>
             </div>
             <div class="form-group">
-                <label>Color de Letra</label>
+                <label>Color de Tipografía</label>
                 <input type="color" id="text-color-picker" value="#ffffff">
             </div>
         </div>
 
         <div class="row-options">
             <div class="form-group">
-                <label>Fondo Caja Superior</label>
-                <button type="button" id="toggle-top-bg" class="toggle-btn active">Caja: ON</button>
+                <label>Posición del Texto 1</label>
+                <select id="pos-main-select">
+                    <option value="top: 15px;">Arriba</option>
+                    <option value="top: 40%;">Centro</option>
+                    <option value="bottom: 80px;">Abajo</option>
+                </select>
             </div>
             <div class="form-group">
-                <label>Fondo Caja Inferior</label>
-                <button type="button" id="toggle-bottom-bg" class="toggle-btn active">Caja: ON</button>
+                <label>Posición del Texto 2</label>
+                <select id="pos-sub-select">
+                    <option value="top: 15px;">Arriba</option>
+                    <option value="top: 40%;">Centro</option>
+                    <option value="bottom: 80px;" selected>Abajo</option>
+                </select>
             </div>
         </div>
 
         <div class="form-group">
-            <label>Subir Imagen o Video (Cualquier medida)</label>
+            <label>Subir Imagen o Captura de Tienda</label>
             <input type="file" id="media-file-input" accept="image/*,video/*">
         </div>
 
         <div class="form-group">
-            <label>Vista Previa Interactiva</label>
+            <label>Vista Previa Interactiva (Estilo IG)</label>
             <div id="preview-box" class="preview-container">
-                <!-- Efecto fondo difuminado automático anti-deformación -->
-                <img id="bg-blur-img" class="preview-bg-blur" alt="Blur Background">
-                <img id="main-img" class="preview-main-img" alt="Main Image">
+                <img id="bg-image" class="preview-bg-media" alt="Fondo">
                 <video id="bg-video" class="preview-bg-video" autoplay muted loop playsinline></video>
-                <div class="preview-overlay"></div>
                 
-                <!-- Bloque Superior -->
-                <div id="box-top-elem" class="preview-text-box box-top bg-box-on">
-                    <p id="text-top-elem" class="preview-hook" style="color: #ffffff;">¿Cuánto tardás en hacer el catálogo? 😳</p>
+                <!-- Caja de Texto 1 -->
+                <div id="box-main" class="ig-text-element style-classic" style="top: 15px;">
+                    <p id="text-main" class="ig-text-content" style="color: #ffffff;">¿Cuánto tardás en hacer el catálogo? 😳</p>
                 </div>
 
-                <!-- Bloque Inferior -->
-                <div id="box-bottom-elem" class="preview-text-box box-bottom bg-box-on">
-                    <p id="text-bottom-elem" class="preview-hook" style="color: #ffffff;">Subí el catálogo con un simple excel y la magia se hace sola. 🚀</p>
+                <!-- Caja de Texto 2 -->
+                <div id="box-sub" class="ig-text-element style-classic" style="bottom: 80px;">
+                    <p id="text-sub" class="ig-text-content" style="color: #ffffff;">Subí el catálogo con un simple excel y la magia se hace sola. 🚀</p>
                 </div>
+
+                <div class="ig-sticker">gestosmart.app</div>
             </div>
         </div>
     </div>
 
     <div class="controls">
-        <button id="download-plate-btn" class="btn">📥 Descargar Placa Perfecta</button>
+        <button id="download-plate-btn" class="btn">📥 Descargar Historia Pro</button>
     </div>
 </div>
 
 <script>
-    const inputTop = document.getElementById('input-top');
-    const inputBottom = document.getElementById('input-bottom');
-    const textTopElem = document.getElementById('text-top-elem');
-    const textBottomElem = document.getElementById('text-bottom-elem');
-    const boxTopElem = document.getElementById('box-top-elem');
-    const boxBottomElem = document.getElementById('box-bottom-elem');
-    const fontFamilySelect = document.getElementById('font-family-select');
+    const inputMain = document.getElementById('input-main');
+    const inputSub = document.getElementById('input-sub');
+    const textMain = document.getElementById('text-main');
+    const textSub = document.getElementById('text-sub');
+    const boxMain = document.getElementById('box-main');
+    const boxSub = document.getElementById('box-sub');
+    const cardStyleSelect = document.getElementById('card-style-select');
     const textColorPicker = document.getElementById('text-color-picker');
-    const toggleTopBg = document.getElementById('toggle-top-bg');
-    const toggleBottomBg = document.getElementById('toggle-bottom-bg');
+    const posMainSelect = document.getElementById('pos-main-select');
+    const posSubSelect = document.getElementById('pos-sub-select');
     const mediaFileInput = document.getElementById('media-file-input');
-    const bgBlurImg = document.getElementById('bg-blur-img');
-    const mainImg = document.getElementById('main-img');
+    const bgImage = document.getElementById('bg-image');
     const bgVideo = document.getElementById('bg-video');
     const previewBox = document.getElementById('preview-box');
     const downloadPlateBtn = document.getElementById('download-plate-btn');
 
-    let topHasBg = true;
-    let bottomHasBg = true;
+    inputMain.addEventListener('input', (e) => { textMain.innerText = e.target.value; });
+    inputSub.addEventListener('input', (e) => { textSub.innerText = e.target.value; });
 
-    inputTop.addEventListener('input', (e) => { textTopElem.innerText = e.target.value; });
-    inputBottom.addEventListener('input', (e) => { textBottomElem.innerText = e.target.value; });
-
-    fontFamilySelect.addEventListener('change', (e) => {
-        textTopElem.style.fontFamily = e.target.value;
-        textBottomElem.style.fontFamily = e.target.value;
+    cardStyleSelect.addEventListener('change', (e) => {
+        boxMain.className = `ig-text-element ${e.target.value}`;
+        boxSub.className = `ig-text-element ${e.target.value}`;
     });
 
     textColorPicker.addEventListener('input', (e) => {
-        textTopElem.style.color = e.target.value;
-        textBottomElem.style.color = e.target.value;
+        textMain.style.color = e.target.value;
+        textSub.style.color = e.target.value;
     });
 
-    toggleTopBg.addEventListener('click', () => {
-        topHasBg = !topHasBg;
-        toggleTopBg.classList.toggle('active', topHasBg);
-        toggleTopBg.innerText = topHasBg ? "Caja: ON" : "Caja: OFF";
-        boxTopElem.className = `preview-text-box box-top ${topHasBg ? 'bg-box-on' : 'bg-box-off'}`;
+    posMainSelect.addEventListener('change', (e) => {
+        boxMain.style.top = ''; boxMain.style.bottom = '';
+        if(e.target.value.includes('top')) boxMain.style.top = '15px';
+        else if(e.target.value.includes('40%')) boxMain.style.top = '40%';
+        else boxMain.style.bottom = '80px';
     });
 
-    toggleBottomBg.addEventListener('click', () => {
-        bottomHasBg = !bottomHasBg;
-        toggleBottomBg.classList.toggle('active', bottomHasBg);
-        toggleBottomBg.innerText = bottomHasBg ? "Caja: ON" : "Caja: OFF";
-        boxBottomElem.className = `preview-text-box box-bottom ${bottomHasBg ? 'bg-box-on' : 'bg-box-off'}`;
+    posSubSelect.addEventListener('change', (e) => {
+        boxSub.style.top = ''; boxSub.style.bottom = '';
+        if(e.target.value.includes('top')) boxSub.style.top = '15px';
+        else if(e.target.value.includes('40%')) boxSub.style.top = '40%';
+        else boxSub.style.bottom = '80px';
     });
 
     mediaFileInput.addEventListener('change', (e) => {
@@ -332,22 +332,19 @@
         const fileURL = URL.createObjectURL(file);
 
         if (file.type.startsWith('video')) {
-            bgBlurImg.style.display = 'none';
-            mainImg.style.display = 'none';
+            bgImage.style.display = 'none';
             bgVideo.src = fileURL;
             bgVideo.style.display = 'block';
             bgVideo.play();
         } else {
             bgVideo.style.display = 'none';
-            bgBlurImg.src = fileURL;
-            bgBlurImg.style.display = 'block';
-            mainImg.src = fileURL;
-            mainImg.style.display = 'block';
+            bgImage.src = fileURL;
+            bgImage.style.display = 'block';
         }
     });
 
     downloadPlateBtn.addEventListener('click', async () => {
-        downloadPlateBtn.innerText = "Generando...";
+        downloadPlateBtn.innerText = "Renderizando...";
         downloadPlateBtn.disabled = true;
 
         try {
@@ -355,17 +352,17 @@
             const canvas = await html2canvas(previewBox, { useCORS: true, scale: 3 });
             const link = document.createElement('a');
             link.href = canvas.toDataURL("image/png");
-            link.download = `gesto-smart-${Date.now()}.png`;
+            link.download = `gesto-smart-story-${Date.now()}.png`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             downloadPlateBtn.innerText = "¡Listo en tu celu! 📥";
         } catch (error) {
             alert("Error: " + error.message);
-            downloadPlateBtn.innerText = "📥 Descargar Placa Perfecta";
+            downloadPlateBtn.innerText = "📥 Descargar Historia Pro";
         } finally {
             setTimeout(() => {
-                downloadPlateBtn.innerText = "📥 Descargar Placa Perfecta";
+                downloadPlateBtn.innerText = "📥 Descargar Historia Pro";
                 downloadPlateBtn.disabled = false;
             }, 2000);
         }
