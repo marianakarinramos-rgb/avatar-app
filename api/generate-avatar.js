@@ -1,10 +1,10 @@
 import { put } from "@vercel/blob";
+import { IncomingForm } from "formidable";
+import fs from "fs";
 
 export const config = {
     api: {
-        bodyParser: {
-            sizeLimit: '10mb',
-        },
+        bodyParser: false, // Desactivado para permitir la subida de archivos pesados (foto y audio)
     },
 };
 
@@ -14,14 +14,38 @@ export default async function handler(req, res) {
     }
 
     try {
-        // 1. Aquí recibes los archivos del formulario frontend (esto ya lo tenías funcionando)
-        // ... tu código actual que procesa frontPhoto y audioSample ...
+        // Parseamos el formulario multiparte que viene del frontend
+        const data = await new Promise((resolve, reject) => {
+            const form = new IncomingForm({ multiples: false });
+            form.parse(req, (err, fields, files) => {
+                if (err) reject(err);
+                resolve({ fields, files });
+            });
+        });
 
-        // (Ejemplo de cómo guardas en Vercel Blob):
-        // const frontBlob = await put(`captures/front-${Date.now()}.jpg`, frontPhotoFile, { access: 'public' });
-        // const audioBlob = await put(`captures/audio-${Date.now()}.webm`, audioSampleFile, { access: 'public' });
+        const frontPhotoFile = data.files.frontPhoto?.[0];
+        const audioSampleFile = data.files.audioSample?.[0];
 
-        // 2. Disparador automático a Fal.ai (¡Adentro de la función, bien colocado!)
+        if (!frontPhotoFile || !audioSampleFile) {
+            return res.status(400).json({ error: "Faltan archivos requeridos (foto o audio)." });
+        }
+
+        // Subimos la foto frontal a Vercel Storage
+        const frontBuffer = fs.readFileSync(frontPhotoFile.filepath);
+        const frontBlob = await put(`captures/front-${Date.now()}.jpg`, frontBuffer, { 
+            access: 'public',
+            token: process.env.BLOB_READ_WRITE_TOKEN
+        });
+
+        // Subimos la muestra de voz a Vercel Storage
+        const audioBuffer = fs.readFileSync(audioSampleFile.filepath);
+        const audioExtension = audioSampleFile.originalFilename?.includes('mp4') ? 'mp4' : 'webm';
+        const audioBlob = await put(`captures/audio-${Date.now()}.${audioExtension}`, audioBuffer, { 
+            access: 'public',
+            token: process.env.BLOB_READ_WRITE_TOKEN
+        });
+
+        // Disparador automático a Fal.ai con webhook asíncrono
         const falResponse = await fetch("https://queue.fal.run/fal-ai/sadtalker", {
             method: "POST",
             headers: {
@@ -29,19 +53,24 @@ export default async function handler(req, res) {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                source_image_url: frontBlob.url, 
-                driven_audio_url: audioBlob.url, 
+                source_image_url: frontBlob.url,
+                driven_audio_url: audioBlob.url,
                 still: true,
                 enhancer: "gfpgan",
-                webhookUrl: "https://avatar-app-beta-snowy.vercel.app/api/webhook" 
+                webhookUrl: "https://avatar-app-beta-snowy.vercel.app/api/webhook"
             })
         });
 
-        // 3. Respuesta limpia al frontend
-        return res.status(200).json({ success: true, message: "Avatar en cola de renderizado" });
+        if (!falResponse.ok) {
+            const errorText = await falResponse.text();
+            throw new Error(`Error en Fal.ai: ${errorText}`);
+        }
+
+        // Éxito instantáneo para el frontend, liberando el hilo de ejecución
+        return res.status(200).json({ success: true, message: "Avatar en cola de renderizado automático" });
 
     } catch (error) {
-        console.error("Error en el backend:", error);
+        console.error("Error crítico en generate-avatar:", error);
         return res.status(500).json({ error: error.message });
     }
 }
