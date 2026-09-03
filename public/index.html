@@ -51,7 +51,7 @@
 
         textarea {
             width: 100%;
-            height: 140px;
+            height: 120px;
             padding: 12px;
             border: 1px solid var(--border);
             border-radius: 8px;
@@ -61,7 +61,7 @@
         }
         textarea:focus { border-color: var(--accent); }
 
-        select {
+        select, input[type="file"] {
             width: 100%;
             padding: 12px;
             border: 1px solid var(--border);
@@ -137,16 +137,21 @@
 <div class="app-container">
     <div class="header">
         <h1>Generador de Avatar Smart</h1>
-        <p>Escribe el guion y deja que la IA trabaje por vos.</p>
+        <p>Escribe el guion, elige tu foto y arma tu contenido.</p>
     </div>
 
     <div class="content-body">
         <div class="form-group">
-            <label>Tu Avatar Base (Fijo)</label>
-            <div class="preview-box">
-                <img src="https://irbok2fr6ltfzhah.public.blob.vercel-storage.com/captures/front-1788449830122-xWGXVgh170CxCuJHvmT7S...jpg" alt="Avatar">
-                <span>Foto Frontal Oficial (Cargada)</span>
-            </div>
+            <label>Seleccionar Foto Base del Avatar</label>
+            <select id="photo-select">
+                <option value="https://irbok2fr6ltfzhah.public.blob.vercel-storage.com/captures/front-1788449830122-xWGXVgh170CxCuJHvmT7S...jpg">Foto Oficial Principal (Gafas)</option>
+                <option value="custom">Subir nueva foto al vuelo...</option>
+            </select>
+        </div>
+
+        <div class="form-group" id="custom-file-group" style="display: none;">
+            <label>Cargar Imagen de Rostro</label>
+            <input type="file" id="custom-photo-file" accept="image/*">
         </div>
 
         <div class="form-group">
@@ -159,8 +164,8 @@
         </div>
 
         <div class="form-group">
-            <label>Guion Comercial (¿Qué querés que diga tu app?)</label>
-            <textarea id="script-input" placeholder="Ej: ¿Cansada de renegar con los catálogos en PDF? Descubrí Gesto Smart, la app diseñada para gestionar tus ventas sin fricción..."></textarea>
+            <label>Guion Comercial (Gesto Smart)</label>
+            <textarea id="script-input" placeholder="Yo sé que cada vez que actualizas tardas horas... ¿cuánto pensás que tardas con catálogo lite?"></textarea>
         </div>
     </div>
 
@@ -170,8 +175,8 @@
 
     <div id="success-screen" class="success-screen">
         <h2>¡Contenido en Producción! 🚀</h2>
-        <p>El motor de IA está procesando el guion y sintetizando tu voz.</p>
-        <p>En unos minutos tendrás el video listo en tu panel de Vercel Storage.</p>
+        <p>El motor de IA está procesando tu foto y sintetizando el guion.</p>
+        <p>En unos minutos tendrás el video listo.</p>
     </div>
 </div>
 
@@ -179,11 +184,23 @@
     const generateBtn = document.getElementById('generate-btn');
     const scriptInput = document.getElementById('script-input');
     const sceneSelect = document.getElementById('scene-select');
+    const photoSelect = document.getElementById('photo-select');
+    const customPhotoFile = document.getElementById('custom-photo-file');
+    const customFileGroup = document.getElementById('custom-file-group');
     const successScreen = document.getElementById('success-screen');
+
+    photoSelect.addEventListener('change', (e) => {
+        if (e.target.value === 'custom') {
+            customFileGroup.style.display = 'flex';
+        } else {
+            customFileGroup.style.display = 'none';
+        }
+    });
 
     generateBtn.addEventListener('click', async () => {
         const textScript = scriptInput.value.trim();
         const selectedScene = sceneSelect.value;
+        const selectedPhoto = photoSelect.value;
 
         if (!textScript) {
             alert("Por favor, escribe un guion para que el avatar pueda hablar.");
@@ -191,16 +208,28 @@
         }
 
         generateBtn.disabled = true;
-        generateBtn.innerText = "Sintetizando voz y video...";
+        generateBtn.innerText = "Procesando contenido...";
 
         try {
-            // Mandamos el texto y el escenario al backend para automatizar la generación
+            let photoUrlToUse = selectedPhoto;
+
+            // Si eligió subir una foto nueva al vuelo, la convertimos a base64 temporal
+            if (selectedPhoto === 'custom' && customPhotoFile.files[0]) {
+                const file = customPhotoFile.files[0];
+                photoUrlToUse = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.readAsDataURL(file);
+                });
+            }
+
             const response = await fetch('/api/generate-from-text', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     script: textScript,
-                    scene: selectedScene
+                    scene: selectedScene,
+                    photoUrl: photoUrlToUse
                 })
             });
 
