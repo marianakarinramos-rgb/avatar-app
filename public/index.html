@@ -217,7 +217,6 @@
 
     const canvas = new fabric.Canvas('mainCanvas', { preserveObjectStacking: true, backgroundColor: '#000' });
     
-    // Función para redimensionar el canvas real dentro del wrapper visual
     function resizeCanvas() {
         const wrapper = document.getElementById('canvasWrapper');
         canvas.setWidth(1080);
@@ -230,7 +229,7 @@
             wrapper.style.aspectRatio = '1/1';
             wrapper.style.maxWidth = 'calc(100vh * (1/1))';
         }
-        canvas.setZoom(1); // El css object-fit se encarga del escalado visual
+        canvas.setZoom(1); 
         if (currentImageObj) renderBaseImage(currentImageObj.lastOverlayOpacity || 0.4);
     }
 
@@ -364,8 +363,9 @@
             "nivelOscurecimiento": 0.5
         }`;
 
-        // CONEXIÓN SÓLIDA - Nombres base oficiales
-        const modelsToTry = ['gemini-1.5-flash'];
+        // FIX DEFINITIVO PARA LA API: Usa "gemini-pro" como principal. 
+        // Si eso falla, usa "gemini-1.5-flash-latest".
+        const modelsToTry = ['gemini-pro', 'gemini-1.5-flash-latest'];
         let success = false;
         let lastError = "";
 
@@ -389,6 +389,10 @@
                     break; 
                 } catch (error) {
                     lastError = error.message;
+                    // Si el error incluye not found, no reintentamos en el mismo modelo, saltamos al próximo.
+                    if (error.message && error.message.includes('not found')) {
+                        break;
+                    }
                     await delay(3000); 
                     retries--;
                 }
@@ -397,7 +401,7 @@
         }
 
         btn.disabled = false; btnText.innerText = "✨ Crear Campaña"; spinner.classList.add('hidden');
-        if (!success) alert(`Error: ${lastError}`);
+        if (!success) alert(`Error API: ${lastError}. Por favor, verifica tu API Key o intenta en un minuto.`);
     }
 
     function aplicarCampanaIA(config) {
@@ -446,7 +450,7 @@
         canvas.add(textBomb);
         canvas.add(logoGroup);
         canvas.renderAll();
-        resizeCanvas(); // Asegura ajuste tras render
+        resizeCanvas(); 
     }
 
     function copyCaption() {
