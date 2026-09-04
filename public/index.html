@@ -47,7 +47,7 @@
         </div>
     </div>
 
-    <!-- Directorio 99 Prompts (Modal Flotante) -->
+    <!-- Directorio 99 Prompts -->
     <div id="promptModal" class="hidden fixed inset-0 bg-black/90 z-50 flex flex-col p-4 backdrop-blur-md">
         <div class="max-w-md w-full mx-auto flex flex-col h-full bg-slate-900 border border-slate-700 rounded-2xl overflow-hidden">
             <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-950">
@@ -86,7 +86,6 @@
                 </select>
             </div>
 
-            <!-- UI Corregida: Grilla limpia, todo a la vista, cero scroll oculto -->
             <div class="grid grid-cols-3 gap-2 mb-3">
                 <button onclick="togglePromptModal()" class="magic-btn col-span-3 bg-cyan-950 border-cyan-800 text-cyan-100 hover:bg-cyan-900 text-center py-3">📚 Explorar Directorio de 99 Comandos</button>
                 <button onclick="applyMagicCommand('/dolor')" class="magic-btn text-center">🛑 Dolor</button>
@@ -102,7 +101,7 @@
             </button>
         </div>
 
-        <!-- Resultados de la Campaña -->
+        <!-- Resultados -->
         <div id="resultsArea" class="hidden flex-col gap-4">
             
             <div id="canvasWrapper" class="canvas-wrapper" style="aspect-ratio: 9/16;">
@@ -385,8 +384,8 @@
             "nivelOscurecimiento": 0.5
         }`;
 
-        // Nodos 100% estables y actualizados
-        const modelsToTry = ['gemini-1.5-flash', 'gemini-1.5-pro'];
+        // 🚨 SOLUCIÓN DEFINITIVA DE CONEXIÓN: Solo modelos estables 🚨
+        const modelsToTry = ['gemini-1.5-flash', 'gemini-pro'];
         let success = false;
         let lastError = "";
 
@@ -410,20 +409,22 @@
                     break; 
                 } catch (error) {
                     lastError = error.message;
-                    // Si el servidor está saturado reintenta. Si es un 404 (not found), sale del loop y salta al próximo modelo.
+                    // Si el error es saturación, espera y reintenta
                     if (error.message && (error.message.includes('demand') || error.message.includes('503') || error.message.includes('429'))) {
                         btnText.innerText = `Saturado. Reintento...`;
-                        await delay(3000); retries--;
-                    } else { 
+                        await delay(3000); 
+                        retries--;
+                    } else {
+                        // Si es cualquier otro error (como el not found), rompe el while y pasa al siguiente modelo
                         break; 
-                    } 
+                    }
                 }
             }
             if (success) break; 
         }
 
         btn.disabled = false; btnText.innerText = "✨ Generar Campaña Completa"; spinner.classList.add('hidden');
-        if (!success) alert(`Error de Conexión: La plataforma de Google está rechazando la petición. Detalles: ${lastError}`);
+        if (!success) alert(`Error de Conexión: ${lastError}`);
     }
 
     function aplicarCampanaIA(config) {
@@ -443,7 +444,7 @@
         const textBomb = new fabric.Textbox((config.fraseBomba || "").toUpperCase(), {
             left: cw / 2, top: ch / 2,
             originX: 'center', originY: 'center',
-            width: cw * 0.90,
+            width: cw * 0.85,
             fontSize: isSerif ? 95 : 85,
             fontFamily: fontToUse,
             fontWeight: isSerif ? '700' : '900',
