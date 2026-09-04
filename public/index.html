@@ -18,14 +18,18 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
         .magic-btn { background: #1e293b; border: 1px solid #334155; color: #94a3b8; font-size: 11px; padding: 6px 10px; border-radius: 6px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
-        .magic-btn:hover { background: #38bdf8; color: #0b0f19; border-color: #38bdf8; font-weight: bold; }
+        .magic-btn:hover { background: #06b6d4; color: #0b0f19; border-color: #06b6d4; font-weight: bold; }
+        
+        /* Toggle Switch Custom */
+        .toggle-checkbox:checked { right: 0; border-color: #06b6d4; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #06b6d4; }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
 
     <header class="p-4 flex justify-between items-center border-b border-slate-800 bg-slate-900/50">
         <div>
-            <h1 class="text-base font-black text-white tracking-tight">GESTO SMART <span class="text-sky-400">IA STUDIO</span></h1>
+            <h1 class="text-base font-black text-white tracking-tight">GESTO SMART <span class="text-cyan-400">STUDIO</span></h1>
         </div>
         <button onclick="toggleConfig()" class="text-slate-400 hover:text-white text-xl" title="Configurar API">⚙️</button>
     </header>
@@ -33,20 +37,14 @@
     <div id="configModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-slate-900 border border-slate-700 p-6 rounded-2xl w-full max-w-sm">
             <h2 class="font-bold text-lg mb-2 text-white">Motor IA (Google Gemini)</h2>
-            <p class="text-xs text-slate-400 mb-4">Reintentos agresivos activados para sortear cuellos de botella.</p>
+            <p class="text-xs text-slate-400 mb-4">La app incluye Auto-Reintento por si los servidores están saturados.</p>
             
             <label class="block text-xs font-bold text-slate-400 mb-1">API Key de Gemini</label>
-            <input type="password" id="apiKeyInput" placeholder="AIzaSy..." class="w-full bg-slate-800 border border-slate-700 p-3 rounded-lg text-sm text-white outline-none mb-6 focus:border-sky-500">
+            <input type="password" id="apiKeyInput" placeholder="AIzaSy..." class="w-full bg-slate-800 border border-slate-700 p-3 rounded-lg text-sm text-white outline-none mb-6 focus:border-cyan-500">
             
-            <label class="block text-xs font-bold text-slate-400 mb-1">Modelo Activo</label>
-            <select id="modelSelect" class="w-full bg-slate-800 border border-slate-700 p-3 rounded-lg text-sm text-white outline-none mb-6 focus:border-sky-500">
-                <option value="gemini-3.6-flash">Gemini 3.6 Flash (Oficial y Rápido)</option>
-                <option value="gemini-3.6-pro">Gemini 3.6 Pro (Avanzado)</option>
-            </select>
-
             <div class="flex gap-2">
                 <button onclick="toggleConfig()" class="flex-1 bg-slate-700 p-3 rounded-lg font-bold text-sm hover:bg-slate-600">Cerrar</button>
-                <button onclick="saveApiKey()" class="flex-1 bg-sky-500 text-slate-900 p-3 rounded-lg font-bold text-sm hover:bg-sky-400">Guardar</button>
+                <button onclick="saveApiKey()" class="flex-1 bg-cyan-500 text-slate-900 p-3 rounded-lg font-bold text-sm hover:bg-cyan-400">Guardar</button>
             </div>
         </div>
     </div>
@@ -56,9 +54,20 @@
         <div class="bg-slate-900/50 p-4 rounded-2xl border border-slate-800 shadow-lg">
             
             <label class="block w-full bg-slate-800 hover:bg-slate-700 transition text-center p-3 rounded-xl border border-dashed border-slate-500 cursor-pointer mb-3">
-                <span class="text-sm font-bold text-sky-400">📁 1. Subir tu Imagen Base</span>
+                <span class="text-sm font-bold text-cyan-400">📁 1. Subir tu Imagen Base</span>
                 <input type="file" id="imageLoader" accept="image/*" class="hidden">
             </label>
+
+            <!-- Switch de Marco de Marca -->
+            <div class="flex items-center justify-between bg-slate-950 p-3 rounded-xl border border-slate-800 mb-3">
+                <span class="text-xs font-bold text-slate-300 flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full bg-cyan-500"></div> Marco Gesto Smart
+                </span>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="frameToggle" class="sr-only peer" checked>
+                    <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-500"></div>
+                </label>
+            </div>
 
             <!-- Botonera Mágica -->
             <div class="flex gap-2 overflow-x-auto pb-2 mb-2 scrollbar-hide">
@@ -68,9 +77,9 @@
                 <button onclick="applyMagicCommand('/meme')" class="magic-btn">😂 /meme</button>
             </div>
 
-            <textarea id="aiPrompt" placeholder="Tocá un comando arriba o agregá detalles (Ej: /sellwithoutselling Enfocado en peluquerías)" class="w-full h-16 bg-slate-950 border border-slate-700 p-3 rounded-xl text-sm text-white outline-none resize-none focus:border-sky-500"></textarea>
+            <textarea id="aiPrompt" placeholder="Tocá un comando arriba o agregá detalles (Ej: /sellwithoutselling Enfocado en peluquerías)" class="w-full h-16 bg-slate-950 border border-slate-700 p-3 rounded-xl text-sm text-white outline-none resize-none focus:border-cyan-500"></textarea>
             
-            <button id="generateBtn" onclick="generateWithAI()" class="w-full mt-3 bg-gradient-to-r from-sky-500 to-indigo-500 text-white font-bold p-3 rounded-xl shadow-lg shadow-sky-500/20 flex justify-center items-center gap-2 hover:from-sky-400 hover:to-indigo-400">
+            <button id="generateBtn" onclick="generateWithAI()" class="w-full mt-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-bold p-3 rounded-xl shadow-lg shadow-cyan-500/20 flex justify-center items-center gap-2 hover:from-cyan-500 hover:to-blue-500">
                 <span id="btnText">✨ 2. Aplicar Magia (IA)</span>
                 <div id="loadingSpinner" class="spinner hidden"></div>
             </button>
@@ -92,37 +101,28 @@
     </div>
 
 <script>
-    let savedModel = localStorage.getItem('gesto_gemini_model');
-    if (savedModel && !savedModel.includes('3.6')) {
-        savedModel = 'gemini-3.6-flash';
-        localStorage.setItem('gesto_gemini_model', savedModel);
-    }
-
     let apiKey = localStorage.getItem('gesto_gemini_key') || '';
     
     function toggleConfig() {
         const modal = document.getElementById('configModal');
         modal.classList.toggle('hidden');
         document.getElementById('apiKeyInput').value = apiKey;
-        document.getElementById('modelSelect').value = localStorage.getItem('gesto_gemini_model') || 'gemini-3.6-flash';
     }
 
     function saveApiKey() {
         apiKey = document.getElementById('apiKeyInput').value.trim();
-        const selectedModel = document.getElementById('modelSelect').value;
         localStorage.setItem('gesto_gemini_key', apiKey);
-        localStorage.setItem('gesto_gemini_model', selectedModel);
         toggleConfig();
     }
 
-    // CONTEXTO CENTRAL DEL PRODUCTO
-    const PRODUCT_CONTEXT = `CONTEXTO OBLIGATORIO DEL PRODUCTO: Estás creando publicidad para "Gesto Smart". Es un software web de gestión, ventas y control de stock ultra ágil, diseñado específicamente para dueños de comercios minoristas y mayoristas que quieren evitar las fricciones e interfaces complejas. Permite calcular precios rápido, manejar el inventario y se ve perfecto tanto en PC como en celulares.`;
+    // CONTEXTO DEL PRODUCTO Y COPYWRITING
+    const PRODUCT_CONTEXT = `CONTEXTO DEL PRODUCTO: "Gesto Smart" es un software ágil para comercios minoristas y mayoristas. Reemplaza Excel y libretas. Hace que gestionar stock y cobrar sea ultra fácil, sin interfaces pesadas.`;
 
     const magicPrompts = {
-        '/scrollstopper': "OBJETIVO: Frenar el scroll. Crea un gancho superior muy corto y polémico sobre la pérdida de tiempo o dinero por desorganización. El CTA inferior debe invitar a usar Gesto Smart. Usa un nivel de oscurecimiento bajo (0.3). Usa fuente Bebas Neue.",
-        '/premiumshowcase': "OBJETIVO: Percepción de alto valor. Escribe un copy elegante que asocie Gesto Smart con negocios de primer nivel y control absoluto. Usa un nivel de oscurecimiento suave (0.2) para que se vea la interfaz detrás. Usa fuente Playfair Display.",
-        '/sellwithoutselling': "OBJETIVO: Vender aportando valor. Crea un gancho superior empático sobre el dolor de controlar el stock a mano o usar sistemas viejos. El CTA debe ofrecer Gesto Smart como la salida ágil. Oscurece MUY poco (0.2). Usa fuente Montserrat.",
-        '/meme': "OBJETIVO: Humor e identificación. Gancho superior estilo 'POV: Cuando tienes que actualizar precios uno por uno...'. CTA abajo: 'Mejor pasate a Gesto Smart'. Nivel de oscurecimiento muy leve (0.2). Usa fuente Montserrat."
+        '/scrollstopper': "Frenar el scroll. Gancho superior muy corto y polémico sobre perder plata por desorganización. CTA inferior: invitar a probar Gesto Smart. Oscurecimiento bajo (0.3). Fuente Bebas Neue.",
+        '/premiumshowcase': "Percepción de alto valor. Copy elegante que asocie Gesto Smart con negocios de primer nivel. Oscurecimiento suave (0.2). Fuente Playfair Display.",
+        '/sellwithoutselling': "Vender aportando valor. Gancho superior sobre el dolor de controlar stock a mano. CTA ofrece Gesto Smart como salida. Oscurece MUY poco (0.2). Fuente Montserrat.",
+        '/meme': "Humor. Gancho superior 'POV: Cuando tienes que actualizar precios uno por uno...'. CTA: 'Mejor pasate a Gesto Smart'. Oscurecimiento (0.2). Fuente Montserrat."
     };
 
     function applyMagicCommand(command) {
@@ -149,7 +149,6 @@
 
     function renderBaseImage(overlayOpacity) {
         if (!currentImageObj) return;
-        
         canvas.clear();
         canvas.backgroundColor = '#000';
 
@@ -173,11 +172,11 @@
         canvas.renderAll();
     }
 
-    // Limpia los textos viejos del canvas antes de reintentar
     function clearOldTexts() {
         const objects = canvas.getObjects();
-        const textObjects = objects.filter(obj => obj.type === 'textbox');
-        textObjects.forEach(obj => canvas.remove(obj));
+        // Borramos textos y logos viejos antes de generar
+        const elementsToRemove = objects.filter(obj => obj.type === 'textbox' || obj.type === 'group' || (obj.type === 'rect' && obj.width === 1080 && obj.fill === 'transparent'));
+        elementsToRemove.forEach(obj => canvas.remove(obj));
         canvas.renderAll();
     }
 
@@ -200,7 +199,6 @@
         btnText.innerText = "Pensando copy...";
         spinner.classList.remove('hidden');
 
-        // Borramos el texto viejo para no confundir visualmente si hay un error
         clearOldTexts();
 
         let hiddenContext = "";
@@ -209,17 +207,14 @@
         } else {
             const possibleCommand = Object.keys(magicPrompts).find(cmd => userInput.startsWith(cmd));
             if(possibleCommand){
-                hiddenContext = magicPrompts[possibleCommand] + " REQUERIMIENTO EXTRA DEL USUARIO: " + userInput.replace(possibleCommand, "");
+                hiddenContext = magicPrompts[possibleCommand] + " EXTRAS DEL USUARIO: " + userInput.replace(possibleCommand, "");
             } else {
-                hiddenContext = "Sigue las instrucciones textuales del usuario: " + userInput;
+                hiddenContext = "Instrucciones del usuario: " + userInput;
             }
         }
 
-        const systemInstructions = `Eres un Director de Arte y Copywriter Senior en tecnología B2B. 
-        ${PRODUCT_CONTEXT}
-        
-        ESTRATEGIA PARA ESTE DISEÑO: ${hiddenContext}
-        
+        const systemInstructions = `Eres un Copywriter Senior B2B. ${PRODUCT_CONTEXT}
+        ESTRATEGIA: ${hiddenContext}
         Devuelve ÚNICAMENTE un objeto JSON válido, SIN markdown.
         JSON Requerido:
         {
@@ -229,16 +224,14 @@
             "colorTexto": "#FFFFFF", 
             "nivelOscurecimiento": 0.2
         }
-        Importante: nivelOscurecimiento debe ser un número entre 0.1 y 0.4 como MÁXIMO absoluto, para que se vea la interfaz del software detrás.`;
+        (nivelOscurecimiento max 0.4).`;
 
-        const preferredModel = localStorage.getItem('gesto_gemini_model') || 'gemini-3.6-flash';
-        const modelsToTry = [...new Set([preferredModel, 'gemini-3.6-flash', 'gemini-3.6-pro'])];
-        
+        const modelsToTry = ['gemini-3.6-flash', 'gemini-3.6-pro'];
         let success = false;
         let lastError = "";
 
         for (const model of modelsToTry) {
-            let retries = 4; // Aumentado a 4 intentos agresivos
+            let retries = 3;
             let retryWait = 3000;
 
             while (retries > 0 && !success) {
@@ -252,35 +245,23 @@
                     });
 
                     const data = await response.json();
-
-                    if (!response.ok) {
-                        throw new Error(data.error?.message || `Error HTTP: ${response.status}`);
-                    }
+                    if (!response.ok) throw new Error(data.error?.message);
                     
                     let textResponse = data.candidates[0].content.parts[0].text;
                     textResponse = textResponse.replace(/```json/g, '').replace(/```/g, '').trim();
                     
-                    let aiResult;
-                    try {
-                        aiResult = JSON.parse(textResponse);
-                    } catch (e) {
-                        throw new Error("Respuesta inválida de la IA. Reintentando...");
-                    }
-
+                    let aiResult = JSON.parse(textResponse);
                     aplicarDisenoIA(aiResult);
                     success = true;
                     break; 
                     
                 } catch (error) {
-                    if (error.message.toLowerCase().includes('high demand') || error.message.includes('503') || error.message.includes('429')) {
-                        btnText.innerText = `Saturado. Reintento ${5 - retries}/4...`;
+                    if (error.message && (error.message.includes('demand') || error.message.includes('503'))) {
+                        btnText.innerText = `Saturado. Reintento...`;
                         await delay(retryWait); 
-                        retryWait += 3000; // Backoff: 3s, luego 6s, luego 9s
+                        retryWait += 3000; 
                         retries--;
-                        lastError = "Los servidores de Google están muy saturados. Por favor, intentá de nuevo en unos minutos.";
-                    } else if (error.message.toLowerCase().includes('not found')) {
-                        lastError = error.message;
-                        break; 
+                        lastError = "Servidores saturados.";
                     } else {
                         lastError = error.message;
                         break; 
@@ -293,15 +274,13 @@
         btn.disabled = false;
         btnText.innerText = "✨ 2. Aplicar Magia (IA)";
         spinner.classList.add('hidden');
-
-        if (!success) {
-            alert(`Error de Google: ${lastError}`);
-        }
+        if (!success) alert(`Error: ${lastError}`);
     }
 
     function aplicarDisenoIA(config) {
         renderBaseImage(config.nivelOscurecimiento || 0.2);
 
+        // 1. TEXTOS IA
         const textTop = new fabric.Textbox((config.ganchoSuperior || "").toUpperCase(), {
             left: 540, top: 200,
             originX: 'center', originY: 'top',
@@ -315,7 +294,7 @@
         });
 
         const textBottom = new fabric.Textbox(config.llamadaInferior || "", {
-            left: 540, top: 1600,
+            left: 540, top: 1750, // Subido un poco para dejarle espacio al logo
             originX: 'center', originY: 'bottom',
             width: 900,
             fontSize: 50,
@@ -328,8 +307,59 @@
             shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.5)', blur: 10 })
         });
 
+        // 2. LOGO VECTORIAL GESTO SMART
+        const logoBg = new fabric.Rect({
+            left: 0, top: 0,
+            width: 140, height: 140,
+            rx: 40, ry: 40, // Bordes redondeados
+            fill: '#0f172a', // Azul muy oscuro
+            stroke: '#06b6d4', // Borde cyan
+            strokeWidth: 10,
+            originX: 'center', originY: 'center'
+        });
+
+        const logoLetter = new fabric.Text('G', {
+            left: 0, top: 0,
+            fontFamily: 'Montserrat',
+            fontWeight: '900',
+            fontStyle: 'italic',
+            fontSize: 100,
+            fill: '#ffffff',
+            originX: 'center', originY: 'center'
+        });
+
+        const logoDot = new fabric.Circle({
+            left: 65, top: -65, // Esquina superior derecha del logo
+            radius: 16,
+            fill: '#06b6d4',
+            originX: 'center', originY: 'center'
+        });
+
+        const logoGroup = new fabric.Group([logoBg, logoLetter, logoDot], {
+            left: 950, top: 1800, // Esquina inferior derecha de la placa
+            originX: 'center', originY: 'center',
+            shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.6)', blur: 20, offsetX: 0, offsetY: 10 }),
+            selectable: true // Te dejo moverlo por si te tapa algo de la foto
+        });
+
         canvas.add(textTop);
         canvas.add(textBottom);
+        canvas.add(logoGroup);
+
+        // 3. MARCO OPCIONAL (Controlado por el switch)
+        const frameToggle = document.getElementById('frameToggle').checked;
+        if (frameToggle) {
+            const frame = new fabric.Rect({
+                left: 0, top: 0,
+                width: 1080, height: 1920,
+                fill: 'transparent',
+                stroke: '#06b6d4', // Color cyan igual al logo
+                strokeWidth: 40, // Borde perimetral
+                selectable: false, evented: false
+            });
+            canvas.add(frame);
+        }
+
         canvas.renderAll();
     }
 
@@ -337,7 +367,7 @@
         canvas.discardActiveObject();
         canvas.renderAll();
         const link = document.createElement('a');
-        link.download = `GestoSmart_Magic_${Date.now()}.png`;
+        link.download = `GestoSmart_Marca_${Date.now()}.png`;
         link.href = canvas.toDataURL({ format: 'png', quality: 1 });
         document.body.appendChild(link);
         link.click();
