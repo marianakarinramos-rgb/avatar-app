@@ -70,17 +70,19 @@
             </div>
 
             <!-- Controles Globales de Estilo -->
-            <div class="grid grid-cols-2 gap-2 mb-3">
-                <select id="globalFont" class="bg-slate-950 border border-slate-700 p-2 rounded-lg text-xs text-white outline-none focus:border-cyan-500">
-                    <option value="Montserrat">Fuente: Montserrat</option>
-                    <option value="Playfair Display">Fuente: Playfair Display</option>
-                    <option value="Cinzel">Fuente: Cinzel</option>
-                </select>
-                <select id="globalColor" class="bg-slate-950 border border-slate-700 p-2 rounded-lg text-xs text-white outline-none focus:border-cyan-500">
-                    <option value="1">Superior Rosa / Inferior Bordó</option>
-                    <option value="2">Blanco Puro (Clásico)</option>
-                    <option value="3">Superior Blanco / Inferior Verde+Amarillo</option>
-                    <option value="4">Superior Blanco / Inferior Rojo+Amarillo</option>
+            <div class="grid grid-cols-1 gap-2 mb-3">
+                <div class="flex gap-2">
+                    <select id="globalFont" class="flex-1 bg-slate-950 border border-slate-700 p-2 rounded-lg text-xs text-white outline-none focus:border-cyan-500">
+                        <option value="Playfair Display">Fuente: Playfair Display</option>
+                        <option value="Montserrat">Fuente: Montserrat</option>
+                        <option value="Cinzel">Fuente: Cinzel</option>
+                    </select>
+                </div>
+                <select id="globalColor" class="w-full bg-slate-950 border border-slate-700 p-2 rounded-lg text-xs text-white outline-none focus:border-cyan-500">
+                    <option value="1">Blanco Puro (Elegante)</option>
+                    <option value="2">Superior Amarillo Pastel / Inferior Celeste</option>
+                    <option value="3">Superior Rosa Claro / Inferior Bordó</option>
+                    <option value="4">Superior Verde / Inferior Amarillo</option>
                 </select>
             </div>
 
@@ -109,14 +111,15 @@
                 <div class="flex justify-between items-center gap-2">
                     <div class="flex items-center gap-2 flex-[0.7]">
                         <span class="text-xs text-slate-400 font-bold">Aa</span>
-                        <input type="range" id="sizeSlider" min="20" max="150" value="65" class="w-full accent-cyan-500">
+                        <input type="range" id="sizeSlider" min="20" max="150" value="60" class="w-full accent-cyan-500">
                     </div>
                     
                     <div class="flex gap-1 flex-[1.3] justify-end">
-                        <div onclick="setTextStyle('#166534', '#fde047')" class="color-swatch bg-green-700 border-yellow-300" title="Verde/Amarillo">Aa</div>
-                        <div onclick="setTextStyle('#dc2626', '#fde047')" class="color-swatch bg-red-600 border-yellow-300" title="Rojo/Amarillo">Aa</div>
-                        <div onclick="setTextStyle('#fbcfe8', '#831843')" class="color-swatch bg-pink-200 border-rose-900 text-rose-900" title="Rosa/Bordo">Aa</div>
-                        <div onclick="setTextStyle('#ffffff', 'transparent')" class="color-swatch bg-white text-black border-slate-400" title="Blanco Puro">Aa</div>
+                        <div onclick="setTextStyle('#FEF08A')" class="color-swatch bg-yellow-200 text-black" title="Amarillo Pastel">Aa</div>
+                        <div onclick="setTextStyle('#A5F3FC')" class="color-swatch bg-cyan-200 text-black" title="Celeste Pastel">Aa</div>
+                        <div onclick="setTextStyle('#FBCFE8')" class="color-swatch bg-pink-200 text-black" title="Rosa Claro">Aa</div>
+                        <div onclick="setTextStyle('#831843')" class="color-swatch bg-rose-900 text-white" title="Bordó">Aa</div>
+                        <div onclick="setTextStyle('#ffffff')" class="color-swatch bg-white text-black" title="Blanco Puro">Aa</div>
                     </div>
                 </div>
             </div>
@@ -273,14 +276,14 @@
         }
     });
 
-    function setTextStyle(fillColor, strokeColor) {
+    // Función para aplicar color SOLO AL RELLENO, sin fondo
+    function setTextStyle(fillColor) {
         const activeObj = canvas.getActiveObject();
         if (activeObj && activeObj.type === 'textbox') {
             activeObj.set({ 
                 fill: fillColor,
-                stroke: strokeColor,
-                strokeWidth: strokeColor !== 'transparent' ? 5 : 0,
-                paintFirst: 'stroke',
+                stroke: 'transparent',
+                strokeWidth: 0,
                 backgroundColor: 'transparent'
             });
             canvas.renderAll();
@@ -292,16 +295,13 @@
             left: canvas.getWidth() / 2, top: canvas.getHeight() / 2,
             originX: 'center', originY: 'center',
             width: 800,
-            fontSize: 70,
-            fontFamily: 'Montserrat',
+            fontSize: 60,
+            fontFamily: document.getElementById('globalFont').value,
             fontWeight: '700',
             fill: '#ffffff',
-            stroke: 'transparent',
-            strokeWidth: 0,
-            paintFirst: 'stroke',
             backgroundColor: 'transparent',
             textAlign: 'center',
-            shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.8)', blur: 15, offsetX: 0, offsetY: 5 }),
+            shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.8)', blur: 15, offsetX: 2, offsetY: 4 }),
         });
         canvas.add(t);
         canvas.setActiveObject(t);
@@ -341,15 +341,16 @@
 
         let hiddenContext = magicPrompts[userInput] || Object.keys(magicPrompts).reduce((acc, cmd) => userInput.startsWith(cmd) ? magicPrompts[cmd] + " EXTRAS: " + userInput.replace(cmd, "") : acc, "") || "Instrucciones: " + userInput;
 
-        // IA con instrucción estricta de tono EMPÁTICO Y CERCANO
-        const systemInstructions = `Eres un Copywriter de marketing directo experto en ventas B2B. ${PRODUCT_CONTEXT}
+        // IA instruida a hacer textos MUY cortos para no tapar la pantalla
+        const systemInstructions = `Eres un Copywriter experto en redes sociales. ${PRODUCT_CONTEXT}
         ESTRATEGIA: ${hiddenContext}
-        TONO OBLIGATORIO: Empático, cercano y ameno. Habla de "tú" o "vos" al comerciante. NUNCA uses "usted", "deje", "optimice". Usa un lenguaje directo y relajado, entendiendo sus problemas del día a día.
+        TONO OBLIGATORIO: Empático y cercano. Habla de "tú" o "vos". NUNCA uses "usted", "deje", "optimice".
+        REGLA DE ORO: Escribe textos MUY CORTOS (máximo 5 a 7 palabras por texto) para no tapar la imagen de fondo.
         Devuelve ÚNICAMENTE un JSON válido, SIN markdown.
         JSON Requerido:
         {
-            "ganchoSuperior": "Texto impacto empático (Usa mayúsculas y minúsculas naturales, no grites todo en mayúsculas)",
-            "llamadaInferior": "Texto CTA relajado y motivador",
+            "ganchoSuperior": "Texto corto y directo",
+            "llamadaInferior": "CTA corto",
             "nivelOscurecimiento": 0.2
         }`;
 
@@ -398,66 +399,57 @@
         const colorPalette = document.getElementById('globalColor').value;
         const isSerif = fontToUse === 'Playfair Display' || fontToUse === 'Cinzel';
 
-        // Lógica de colores según el selector
+        // Lógica de colores directos a la TIPOGRAFÍA (Fill)
         let topFill = '#ffffff';
-        let topStroke = 'transparent';
-        
         let bottomFill = '#ffffff';
-        let bottomStroke = 'transparent';
 
-        if (colorPalette == "1") {
-            // Superior Rosa / Inferior Bordó
-            topFill = '#fbcfe8'; // Rosa
-            topStroke = '#831843'; // Bordó
-            bottomFill = '#831843'; // Bordó
-            bottomStroke = '#fbcfe8'; // Rosa
+        if (colorPalette == "2") {
+            // Amarillo Pastel / Celeste Pastel
+            topFill = '#FEF08A';
+            bottomFill = '#A5F3FC';
         } else if (colorPalette == "3") {
-            // Superior Blanco / Inferior Verde+Amarillo
-            topFill = '#ffffff';
-            bottomFill = '#166534'; // Verde
-            bottomStroke = '#fde047'; // Amarillo
+            // Rosa Claro / Bordó
+            topFill = '#FBCFE8';
+            bottomFill = '#831843';
         } else if (colorPalette == "4") {
-            // Superior Blanco / Inferior Rojo+Amarillo
-            topFill = '#ffffff';
-            bottomFill = '#dc2626'; // Rojo
-            bottomStroke = '#fde047'; // Amarillo
+            // Verde / Amarillo
+            topFill = '#15803d'; // Verde un poco más oscuro para que lea bien
+            bottomFill = '#fde047';
         }
-        // Si es 2 (Blanco Clásico), quedan los defaults en blanco
+        // Si es 1 (Blanco Puro), quedan los defaults en blanco
 
+        // Texto Superior: Más pequeño para no tapar, sombra paralela oscura
         const textTop = new fabric.Textbox(config.ganchoSuperior || "", {
-            left: cw / 2, top: ch * 0.15,
+            left: cw / 2, top: ch * 0.20,
             originX: 'center', originY: 'top',
             width: cw * 0.85,
-            fontSize: isSerif ? 85 : 70,
+            fontSize: isSerif ? 65 : 55, // Tamaños reducidos
             fontFamily: fontToUse,
-            fontWeight: isSerif ? '700' : '600',
+            fontWeight: isSerif ? '700' : '800',
             fontStyle: fontToUse === 'Playfair Display' ? 'italic' : 'normal',
             fill: topFill,
-            stroke: topStroke,
-            strokeWidth: topStroke !== 'transparent' ? 5 : 0,
-            paintFirst: 'stroke',
             backgroundColor: 'transparent',
             textAlign: 'center',
-            shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.9)', blur: 25, offsetX: 0, offsetY: 10 }),
+            shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.85)', blur: 15, offsetX: 2, offsetY: 4 }), // Sombra paralela elegante
             lineHeight: 1.1
         });
 
+        // Texto Inferior: Más pequeño, misma fuente que arriba, sombra paralela
         const textBottom = new fabric.Textbox(config.llamadaInferior || "", {
-            left: cw / 2, top: ch * 0.80, 
+            left: cw / 2, top: ch * 0.75, 
             originX: 'center', originY: 'bottom',
-            width: cw * 0.90,
-            fontSize: 55,
+            width: cw * 0.85,
+            fontSize: isSerif ? 50 : 40, // Tamaños reducidos
             fontFamily: fontToUse, 
-            fontWeight: '800',
+            fontWeight: '700',
             fill: bottomFill,
-            stroke: bottomStroke,
-            strokeWidth: bottomStroke !== 'transparent' ? 6 : 0,
-            paintFirst: 'stroke', 
             backgroundColor: 'transparent',
             textAlign: 'center',
-            shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.6)', blur: 12, offsetX: 0, offsetY: 8 })
+            shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.85)', blur: 15, offsetX: 2, offsetY: 4 }), // Sombra paralela
+            lineHeight: 1.1
         });
 
+        // Logo Gesto Smart Vectorial (esquina)
         const logoBg = new fabric.Rect({ left: 0, top: 0, width: 320, height: 320, rx: 65, ry: 65, fill: '#0d111c', originX: 'center', originY: 'center' });
         const cyanBox = new fabric.Rect({ left: 0, top: -45, width: 150, height: 150, rx: 35, ry: 35, fill: 'transparent', stroke: '#06b6d4', strokeWidth: 9, originX: 'center', originY: 'center' });
         const letterG = new fabric.Text('G', { left: -2, top: -45, fontFamily: 'Montserrat', fontWeight: '900', fontStyle: 'italic', fontSize: 90, fill: '#ffffff', originX: 'center', originY: 'center' });
