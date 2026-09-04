@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gesto Smart • IA Studio Pro</title>
     
-    <!-- Fuentes Premium Cargadas -->
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Montserrat:wght@300;400;600;700&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Montserrat:wght@300;400;600;700;800;900&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
 
@@ -68,6 +67,21 @@
             <div class="flex gap-2 mb-3">
                 <div id="btnFormat916" onclick="setFormat('9:16')" class="format-btn active">📱 Story/Reel (9:16)</div>
                 <div id="btnFormat11" onclick="setFormat('1:1')" class="format-btn">🔲 Post/Feed (1:1)</div>
+            </div>
+
+            <!-- Controles Globales de Estilo -->
+            <div class="grid grid-cols-2 gap-2 mb-3">
+                <select id="globalFont" class="bg-slate-950 border border-slate-700 p-2 rounded-lg text-xs text-white outline-none focus:border-cyan-500">
+                    <option value="Montserrat">Fuente: Montserrat</option>
+                    <option value="Playfair Display">Fuente: Playfair Display</option>
+                    <option value="Cinzel">Fuente: Cinzel</option>
+                </select>
+                <select id="globalColor" class="bg-slate-950 border border-slate-700 p-2 rounded-lg text-xs text-white outline-none focus:border-cyan-500">
+                    <option value="1">Superior Rosa / Inferior Bordó</option>
+                    <option value="2">Blanco Puro (Clásico)</option>
+                    <option value="3">Superior Blanco / Inferior Verde+Amarillo</option>
+                    <option value="4">Superior Blanco / Inferior Rojo+Amarillo</option>
+                </select>
             </div>
 
             <div class="flex gap-2 overflow-x-auto pb-2 mb-2 scrollbar-hide">
@@ -279,9 +293,8 @@
             originX: 'center', originY: 'center',
             width: 800,
             fontSize: 70,
-            fontFamily: 'Playfair Display',
+            fontFamily: 'Montserrat',
             fontWeight: '700',
-            fontStyle: 'italic',
             fill: '#ffffff',
             stroke: 'transparent',
             strokeWidth: 0,
@@ -297,10 +310,10 @@
 
     const PRODUCT_CONTEXT = `CONTEXTO: "Gesto Smart" software de calidad premium y ágil para gestión/ventas.`;
     const magicPrompts = {
-        '/scrollstopper': "Gancho polémico. CTA invita a Gesto Smart. Oscurecimiento (0.3). Usa fuente Playfair Display.",
-        '/premiumshowcase': "Copy elegante y de alto valor. Oscurecimiento (0.2). Usa fuente Playfair Display o Cinzel.",
-        '/sellwithoutselling': "Dolor de stock manual. CTA ofrece Gesto Smart. Oscurece poco (0.2). Usa fuente Montserrat ligera.",
-        '/meme': "Humor 'POV: actualizar precios a mano'. CTA Gesto Smart. Oscurecimiento (0.2). Usa fuente Montserrat."
+        '/scrollstopper': "Gancho polémico. CTA invita a Gesto Smart. Oscurecimiento (0.3).",
+        '/premiumshowcase': "Copy elegante y de alto valor. Oscurecimiento (0.2).",
+        '/sellwithoutselling': "Dolor de stock manual. CTA ofrece Gesto Smart. Oscurece poco (0.2).",
+        '/meme': "Humor 'POV: actualizar precios a mano'. CTA Gesto Smart. Oscurecimiento (0.2)."
     };
 
     function applyMagicCommand(command) { document.getElementById('aiPrompt').value = command; }
@@ -328,15 +341,15 @@
 
         let hiddenContext = magicPrompts[userInput] || Object.keys(magicPrompts).reduce((acc, cmd) => userInput.startsWith(cmd) ? magicPrompts[cmd] + " EXTRAS: " + userInput.replace(cmd, "") : acc, "") || "Instrucciones: " + userInput;
 
-        const systemInstructions = `Eres un Director de Arte de marcas de lujo B2B. ${PRODUCT_CONTEXT}
+        // IA con instrucción estricta de tono EMPÁTICO Y CERCANO
+        const systemInstructions = `Eres un Copywriter de marketing directo experto en ventas B2B. ${PRODUCT_CONTEXT}
         ESTRATEGIA: ${hiddenContext}
-        Devuelve ÚNICAMENTE un JSON válido, SIN markdown. Respeta mayúsculas/minúsculas para dar elegancia (no todo en mayúsculas).
+        TONO OBLIGATORIO: Empático, cercano y ameno. Habla de "tú" o "vos" al comerciante. NUNCA uses "usted", "deje", "optimice". Usa un lenguaje directo y relajado, entendiendo sus problemas del día a día.
+        Devuelve ÚNICAMENTE un JSON válido, SIN markdown.
         JSON Requerido:
         {
-            "ganchoSuperior": "Texto impacto elegante (Usa mayúsculas y minúsculas)",
-            "llamadaInferior": "Texto CTA",
-            "tipografiaElegida": "Elige entre: 'Playfair Display', 'Cinzel' o 'Montserrat'",
-            "paletaElegida": "Elige aleatoriamente 1, 2 o 3 (1=Verde/Amarillo, 2=Rojo/Amarillo, 3=Bordo/Rosa)",
+            "ganchoSuperior": "Texto impacto empático (Usa mayúsculas y minúsculas naturales, no grites todo en mayúsculas)",
+            "llamadaInferior": "Texto CTA relajado y motivador",
             "nivelOscurecimiento": 0.2
         }`;
 
@@ -381,49 +394,64 @@
         const cw = canvas.getWidth();
         const ch = canvas.getHeight();
 
-        const fontToUse = config.tipografiaElegida || 'Playfair Display';
+        const fontToUse = document.getElementById('globalFont').value;
+        const colorPalette = document.getElementById('globalColor').value;
         const isSerif = fontToUse === 'Playfair Display' || fontToUse === 'Cinzel';
 
-        // GANCHO SUPERIOR: Elegante, respeta caja alta/baja, peso ligero/normal.
+        // Lógica de colores según el selector
+        let topFill = '#ffffff';
+        let topStroke = 'transparent';
+        
+        let bottomFill = '#ffffff';
+        let bottomStroke = 'transparent';
+
+        if (colorPalette == "1") {
+            // Superior Rosa / Inferior Bordó
+            topFill = '#fbcfe8'; // Rosa
+            topStroke = '#831843'; // Bordó
+            bottomFill = '#831843'; // Bordó
+            bottomStroke = '#fbcfe8'; // Rosa
+        } else if (colorPalette == "3") {
+            // Superior Blanco / Inferior Verde+Amarillo
+            topFill = '#ffffff';
+            bottomFill = '#166534'; // Verde
+            bottomStroke = '#fde047'; // Amarillo
+        } else if (colorPalette == "4") {
+            // Superior Blanco / Inferior Rojo+Amarillo
+            topFill = '#ffffff';
+            bottomFill = '#dc2626'; // Rojo
+            bottomStroke = '#fde047'; // Amarillo
+        }
+        // Si es 2 (Blanco Clásico), quedan los defaults en blanco
+
         const textTop = new fabric.Textbox(config.ganchoSuperior || "", {
             left: cw / 2, top: ch * 0.15,
             originX: 'center', originY: 'top',
             width: cw * 0.85,
-            fontSize: isSerif ? 85 : 70, // Serifas necesitan un poco más de tamaño visual
+            fontSize: isSerif ? 85 : 70,
             fontFamily: fontToUse,
-            fontWeight: isSerif ? '700' : '400',
+            fontWeight: isSerif ? '700' : '600',
             fontStyle: fontToUse === 'Playfair Display' ? 'italic' : 'normal',
-            fill: '#ffffff',
-            stroke: 'transparent',
-            strokeWidth: 0,
+            fill: topFill,
+            stroke: topStroke,
+            strokeWidth: topStroke !== 'transparent' ? 5 : 0,
+            paintFirst: 'stroke',
             backgroundColor: 'transparent',
             textAlign: 'center',
             shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.9)', blur: 25, offsetX: 0, offsetY: 10 }),
             lineHeight: 1.1
         });
 
-        // CTA INFERIOR: Paletas duales
-        let textFill = '#166534'; 
-        let textStroke = '#fde047'; 
-        
-        if (config.paletaElegida == 2) {
-            textFill = '#dc2626'; 
-            textStroke = '#fde047'; 
-        } else if (config.paletaElegida == 3) {
-            textFill = '#fbcfe8'; 
-            textStroke = '#831843'; 
-        }
-
         const textBottom = new fabric.Textbox(config.llamadaInferior || "", {
             left: cw / 2, top: ch * 0.80, 
             originX: 'center', originY: 'bottom',
             width: cw * 0.90,
-            fontSize: 50,
-            fontFamily: 'Montserrat', 
+            fontSize: 55,
+            fontFamily: fontToUse, 
             fontWeight: '800',
-            fill: textFill,
-            stroke: textStroke,
-            strokeWidth: 5, // Borde más sutil
+            fill: bottomFill,
+            stroke: bottomStroke,
+            strokeWidth: bottomStroke !== 'transparent' ? 6 : 0,
             paintFirst: 'stroke', 
             backgroundColor: 'transparent',
             textAlign: 'center',
