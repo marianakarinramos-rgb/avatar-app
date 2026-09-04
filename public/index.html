@@ -5,25 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gesto Smart • IA Studio Pro</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Playfair+Display:ital,wght@0,700;1,700&family=Montserrat:wght@400;700;900&family=Cinzel:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
 
     <style>
-        body { background-color: #0b0f19; color: #f8fafc; }
+        body { background-color: #0b0f19; color: #f8fafc; font-family: 'Montserrat', sans-serif; }
         .canvas-wrapper { width: 100%; max-width: 400px; margin: 0 auto; position: relative; box-shadow: 0 20px 40px rgba(0,0,0,0.8); border-radius: 16px; overflow: hidden; border: 1px solid #1e293b; background-color: #000; transition: aspect-ratio 0.3s ease; }
         .canvas-container { width: 100% !important; height: 100% !important; }
         .canvas-container canvas { width: 100% !important; height: 100% !important; object-fit: contain; }
         .spinner { border: 3px solid rgba(56, 189, 248, 0.3); border-left-color: #38bdf8; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        .magic-btn { background: #1e293b; border: 1px solid #334155; color: #94a3b8; font-size: 11px; padding: 6px 10px; border-radius: 6px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
-        .magic-btn:hover { background: #06b6d4; color: #0b0f19; border-color: #06b6d4; font-weight: bold; }
+        .magic-btn { background: #1e293b; border: 1px solid #334155; color: #94a3b8; font-size: 11px; padding: 6px 10px; border-radius: 6px; cursor: pointer; transition: all 0.2s; white-space: nowrap; font-weight: bold; }
+        .magic-btn:hover { background: #06b6d4; color: #0b0f19; border-color: #06b6d4; }
         
         .format-btn { flex: 1; padding: 8px; text-align: center; font-size: 12px; font-weight: bold; border-radius: 8px; cursor: pointer; border: 1px solid #334155; color: #94a3b8; transition: all 0.2s; }
         .format-btn.active { background: #06b6d4; color: #0b0f19; border-color: #06b6d4; }
         
-        .color-swatch { width: 24px; height: 24px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: scale 0.1s; }
+        /* Swatches de combinaciones duales */
+        .color-swatch { width: 30px; height: 30px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; transition: scale 0.1s; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900; color: white; }
         .color-swatch:hover { scale: 1.1; }
         
         .scrollbar-hide::-webkit-scrollbar { display: none; }
@@ -64,7 +65,6 @@
                 </button>
             </div>
 
-            <!-- Selector de Formato -->
             <div class="flex gap-2 mb-3">
                 <div id="btnFormat916" onclick="setFormat('9:16')" class="format-btn active">📱 Story/Reel (9:16)</div>
                 <div id="btnFormat11" onclick="setFormat('1:1')" class="format-btn">🔲 Post/Feed (1:1)</div>
@@ -85,25 +85,26 @@
             </button>
         </div>
 
-        <!-- Canvas HD con Panel Flotante de Edición -->
         <div class="relative">
             <div id="canvasWrapper" class="canvas-wrapper" style="aspect-ratio: 9/16;">
                 <canvas id="mainCanvas"></canvas>
             </div>
 
-            <!-- Panel Flotante de Edición Textual (Oculto por defecto) -->
-            <div id="editPanel" class="hidden absolute bottom-4 left-1/2 -translate-x-1/2 w-11/12 bg-slate-900/95 backdrop-blur-md border border-slate-700 p-3 rounded-xl shadow-2xl z-20 flex-col gap-3">
-                <input type="text" id="textEditor" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-white outline-none focus:border-cyan-500" placeholder="Editar texto...">
-                <div class="flex justify-between items-center">
-                    <div class="flex items-center gap-2 flex-1 mr-4">
-                        <span class="text-xs text-slate-400">Aa</span>
+            <!-- Panel Flotante de Edición Textual -->
+            <div id="editPanel" class="hidden absolute bottom-4 left-1/2 -translate-x-1/2 w-[95%] bg-slate-900/95 backdrop-blur-md border border-slate-700 p-3 rounded-xl shadow-2xl z-20 flex-col gap-3">
+                <input type="text" id="textEditor" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-white outline-none focus:border-cyan-500 font-bold" placeholder="Editar texto...">
+                <div class="flex justify-between items-center gap-2">
+                    <div class="flex items-center gap-2 flex-[0.8]">
+                        <span class="text-xs text-slate-400 font-bold">Aa</span>
                         <input type="range" id="sizeSlider" min="20" max="150" value="80" class="w-full accent-cyan-500">
                     </div>
-                    <div class="flex gap-2">
-                        <div onclick="setTextColor('#FFFFFF')" class="color-swatch bg-white border-slate-400"></div>
-                        <div onclick="setTextColor('#FDE047')" class="color-swatch bg-yellow-300"></div>
-                        <div onclick="setTextColor('#06b6d4')" class="color-swatch bg-cyan-500"></div>
-                        <div onclick="setTextColor('#000000')" class="color-swatch bg-black border-slate-600"></div>
+                    
+                    <!-- Botonera de combinaciones de color (Texto Blanco + Fondo/Borde) -->
+                    <div class="flex gap-1 flex-[1.2] justify-end">
+                        <div onclick="setTextStyle('#008000', '#FDE047')" class="color-swatch bg-green-700 border-yellow-300" title="Verde/Amarillo">Aa</div>
+                        <div onclick="setTextStyle('#FF0033', '#FDE047')" class="color-swatch bg-red-600 border-yellow-300" title="Rojo/Amarillo">Aa</div>
+                        <div onclick="setTextStyle('#990033', '#FFC0CB')" class="color-swatch bg-rose-900 border-pink-300" title="Bordo/Rosa">Aa</div>
+                        <div onclick="setTextStyle('transparent', '#000000')" class="color-swatch border-white text-white" style="background: rgba(0,0,0,0.85);" title="Clásico Negro">Aa</div>
                     </div>
                 </div>
             </div>
@@ -120,22 +121,42 @@
     </div>
 
 <script>
-    // ==========================================
-    // OVERRIDE CORE FABRIC.JS: Esquinas Redondeadas en Textbox
-    // ==========================================
+    // Override Fabric.js para fondos curvos y padding nativo
     fabric.Textbox.prototype._renderBackground = function(ctx) {
-        if (!this.backgroundColor) return;
+        if (!this.backgroundColor && !this.stroke) return;
         var dim = this._getNonTransformedDimensions();
-        ctx.fillStyle = this.backgroundColor;
-        if (ctx.roundRect) {
-            ctx.beginPath();
-            ctx.roundRect(-dim.x / 2, -dim.y / 2, dim.x, dim.y, 25);
-            ctx.fill();
-        } else {
-            ctx.fillRect(-dim.x / 2, -dim.y / 2, dim.x, dim.y);
+        
+        // Ampliamos el fondo para dar padding al texto
+        var padX = 30;
+        var padY = 20;
+        var w = dim.x + padX;
+        var h = dim.y + padY;
+        var left = -w / 2;
+        var top = -h / 2;
+
+        if (this.backgroundColor) {
+            ctx.fillStyle = this.backgroundColor;
+            if (ctx.roundRect) {
+                ctx.beginPath();
+                ctx.roundRect(left, top, w, h, 15);
+                ctx.fill();
+            } else {
+                ctx.fillRect(left, top, w, h);
+            }
+        }
+        
+        if (this.stroke) {
+            ctx.strokeStyle = this.stroke;
+            ctx.lineWidth = 4;
+            if (ctx.roundRect) {
+                ctx.beginPath();
+                ctx.roundRect(left, top, w, h, 15);
+                ctx.stroke();
+            } else {
+                ctx.strokeRect(left, top, w, h);
+            }
         }
     };
-    // ==========================================
 
     let apiKey = localStorage.getItem('gesto_gemini_key') || '';
     let currentFormat = '9:16';
@@ -204,7 +225,6 @@
     function renderBaseImage(overlayOpacity) {
         if (!currentImageObj) return;
         
-        // Limpiamos la imagen anterior y el overlay
         const objects = canvas.getObjects();
         const bgs = objects.filter(obj => obj.type === 'image' || (obj.type === 'rect' && obj.fill && obj.fill.includes('rgba')));
         bgs.forEach(obj => canvas.remove(obj));
@@ -214,14 +234,13 @@
         const cw = canvas.getWidth();
         const ch = canvas.getHeight();
         
-        // CORRECCIÓN CLAVE: Math.min ajusta la imagen para que encaje 100% sin cortes
         const scale = Math.min(cw / currentImageObj.width, ch / currentImageObj.height);
         
         currentImageObj.set({
             originX: 'center', originY: 'center',
             left: cw / 2, top: ch / 2,
             scaleX: scale, scaleY: scale,
-            selectable: true, // Ahora podés arrastrar y ajustar el fondo a gusto
+            selectable: true, 
             evented: true,
             hasControls: true,
             hasBorders: true
@@ -237,7 +256,6 @@
                 selectable: false, evented: false
             });
             canvas.add(overlay);
-            // Aseguramos que el overlay quede detrás de los textos pero arriba de la imagen
             canvas.moveTo(overlay, 1);
         }
         canvas.renderAll();
@@ -280,14 +298,20 @@
         }
     });
 
-    function setTextColor(hexCode) {
+    // Función para aplicar combinaciones duales a un texto seleccionado
+    function setTextStyle(bgColor, strokeColor) {
         const activeObj = canvas.getActiveObject();
         if (activeObj && activeObj.type === 'textbox') {
-            activeObj.set({ fill: hexCode });
+            activeObj.set({ 
+                fill: '#FFFFFF', // Siempre blanco
+                backgroundColor: bgColor,
+                stroke: strokeColor
+            });
             canvas.renderAll();
         }
     }
 
+    // Inserción Manual (Siempre Montserrat Blanco)
     function addFreeText() {
         const t = new fabric.Textbox("NUEVO TEXTO", {
             left: canvas.getWidth() / 2, top: canvas.getHeight() / 2,
@@ -296,22 +320,24 @@
             fontSize: 70,
             fontFamily: 'Montserrat',
             fontWeight: '900',
-            fill: '#ffffff',
+            fill: '#ffffff', // Fuerza blanco
+            backgroundColor: 'rgba(0,0,0,0.85)',
+            stroke: 'transparent',
             textAlign: 'center',
-            shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.9)', blur: 15, offsetX: 0, offsetY: 5 }),
-            padding: 20
+            shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.5)', blur: 10, offsetX: 0, offsetY: 5 }),
+            padding: 10
         });
         canvas.add(t);
         canvas.setActiveObject(t);
         canvas.renderAll();
     }
 
-    const PRODUCT_CONTEXT = `CONTEXTO: "Gesto Smart" software ágil de gestión/ventas para comercios.`;
+    const PRODUCT_CONTEXT = `CONTEXTO: "Gesto Smart" software ágil de gestión/ventas.`;
     const magicPrompts = {
-        '/scrollstopper': "Gancho polémico sobre perder plata. CTA invita a Gesto Smart. Oscurecimiento bajo (0.3). Fuente Bebas Neue.",
-        '/premiumshowcase': "Copy elegante, alto valor. Oscurecimiento suave (0.2). Fuente Playfair Display.",
-        '/sellwithoutselling': "Gancho sobre dolor de stock a mano. CTA ofrece Gesto Smart. Oscurece MUY poco (0.2). Fuente Montserrat.",
-        '/meme': "Humor 'POV: actualizar precios a mano'. CTA a Gesto Smart. Oscurecimiento (0.2). Fuente Montserrat."
+        '/scrollstopper': "Gancho polémico. CTA invita a Gesto Smart. Oscurecimiento bajo (0.3).",
+        '/premiumshowcase': "Copy elegante. Oscurecimiento suave (0.2).",
+        '/sellwithoutselling': "Dolor de stock manual. CTA ofrece Gesto Smart. Oscurece poco (0.2).",
+        '/meme': "Humor 'POV: actualizar precios a mano'. CTA Gesto Smart. Oscurecimiento (0.2)."
     };
 
     function applyMagicCommand(command) { document.getElementById('aiPrompt').value = command; }
@@ -339,16 +365,14 @@
 
         let hiddenContext = magicPrompts[userInput] || Object.keys(magicPrompts).reduce((acc, cmd) => userInput.startsWith(cmd) ? magicPrompts[cmd] + " EXTRAS: " + userInput.replace(cmd, "") : acc, "") || "Instrucciones: " + userInput;
 
+        // IA solo decide textos, la tipografía Montserrat Blanca es fija.
         const systemInstructions = `Eres Copywriter B2B. ${PRODUCT_CONTEXT}
         ESTRATEGIA: ${hiddenContext}
         Devuelve ÚNICAMENTE un JSON válido, SIN markdown.
         JSON Requerido:
         {
-            "ganchoSuperior": "Texto impacto",
+            "ganchoSuperior": "Texto impacto corto",
             "llamadaInferior": "Texto CTA",
-            "tipografia": "Bebas Neue", 
-            "colorGancho": "HEX", 
-            "colorFondoCTA": "rgba(0,0,0,0.85)",
             "nivelOscurecimiento": 0.2
         }`;
 
@@ -393,33 +417,36 @@
         const cw = canvas.getWidth();
         const ch = canvas.getHeight();
 
+        // TEXTO SUPERIOR (Fijo: Blanco Montserrat con Sombra Profunda)
         const textTop = new fabric.Textbox((config.ganchoSuperior || "").toUpperCase(), {
             left: cw / 2, top: ch * 0.15,
             originX: 'center', originY: 'top',
             width: cw * 0.85,
-            fontSize: config.tipografia === 'Bebas Neue' ? 100 : 75,
-            fontFamily: config.tipografia || 'Montserrat',
+            fontSize: 75,
+            fontFamily: 'Montserrat',
             fontWeight: '900',
-            fill: config.colorGancho || '#ffffff',
+            fill: '#ffffff',
             textAlign: 'center',
-            shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.9)', blur: 20, offsetX: 0, offsetY: 8 })
+            shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.9)', blur: 25, offsetX: 0, offsetY: 10 })
         });
 
-        const isBgLight = config.colorFondoCTA === '#06b6d4' || config.colorFondoCTA === '#FDE047';
+        // TEXTO INFERIOR (Fijo: Blanco Montserrat con Fondo Oscuro)
         const textBottom = new fabric.Textbox(config.llamadaInferior || "", {
             left: cw / 2, top: ch * 0.85, 
             originX: 'center', originY: 'bottom',
             width: cw * 0.85,
             fontSize: 45,
             fontFamily: 'Montserrat', 
-            fontWeight: 'bold',
-            fill: isBgLight ? '#000000' : '#ffffff',
+            fontWeight: '900',
+            fill: '#ffffff',
             textAlign: 'center',
-            backgroundColor: config.colorFondoCTA || 'rgba(0,0,0,0.85)',
-            padding: 30, 
-            shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.6)', blur: 15, offsetX: 0, offsetY: 10 })
+            backgroundColor: 'rgba(0,0,0,0.85)',
+            stroke: 'transparent',
+            padding: 10,
+            shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.5)', blur: 10, offsetX: 0, offsetY: 5 })
         });
 
+        // Logo Minimalista Gesto Smart (Fijo en esquina)
         const logoBg = new fabric.Rect({ left: 0, top: 0, width: 320, height: 320, rx: 65, ry: 65, fill: '#0d111c', originX: 'center', originY: 'center' });
         const cyanBox = new fabric.Rect({ left: 0, top: -45, width: 150, height: 150, rx: 35, ry: 35, fill: 'transparent', stroke: '#06b6d4', strokeWidth: 9, originX: 'center', originY: 'center' });
         const letterG = new fabric.Text('G', { left: -2, top: -45, fontFamily: 'Montserrat', fontWeight: '900', fontStyle: 'italic', fontSize: 90, fill: '#ffffff', originX: 'center', originY: 'center' });
