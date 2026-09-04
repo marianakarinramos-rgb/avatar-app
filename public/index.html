@@ -19,10 +19,6 @@
         
         .magic-btn { background: #1e293b; border: 1px solid #334155; color: #94a3b8; font-size: 11px; padding: 6px 10px; border-radius: 6px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
         .magic-btn:hover { background: #06b6d4; color: #0b0f19; border-color: #06b6d4; font-weight: bold; }
-        
-        /* Toggle Switch Custom */
-        .toggle-checkbox:checked { right: 0; border-color: #06b6d4; }
-        .toggle-checkbox:checked + .toggle-label { background-color: #06b6d4; }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
@@ -115,11 +111,10 @@
         toggleConfig();
     }
 
-    // CONTEXTO DEL PRODUCTO Y COPYWRITING
     const PRODUCT_CONTEXT = `CONTEXTO DEL PRODUCTO: "Gesto Smart" es un software ágil para comercios minoristas y mayoristas. Reemplaza Excel y libretas. Hace que gestionar stock y cobrar sea ultra fácil, sin interfaces pesadas.`;
 
     const magicPrompts = {
-        '/scrollstopper': "Frenar el scroll. Gancho superior muy corto y polémico sobre perder plata por desorganización. CTA inferior: invitar a probar Gesto Smart. Oscurecimiento bajo (0.3). Fuente Bebas Neue.",
+        '/scrollstopper': "Frenar el scroll. Gancho superior muy corto y polémico. CTA inferior: invitar a probar Gesto Smart. Oscurecimiento bajo (0.3). Fuente Bebas Neue.",
         '/premiumshowcase': "Percepción de alto valor. Copy elegante que asocie Gesto Smart con negocios de primer nivel. Oscurecimiento suave (0.2). Fuente Playfair Display.",
         '/sellwithoutselling': "Vender aportando valor. Gancho superior sobre el dolor de controlar stock a mano. CTA ofrece Gesto Smart como salida. Oscurece MUY poco (0.2). Fuente Montserrat.",
         '/meme': "Humor. Gancho superior 'POV: Cuando tienes que actualizar precios uno por uno...'. CTA: 'Mejor pasate a Gesto Smart'. Oscurecimiento (0.2). Fuente Montserrat."
@@ -174,8 +169,7 @@
 
     function clearOldTexts() {
         const objects = canvas.getObjects();
-        // Borramos textos y logos viejos antes de generar
-        const elementsToRemove = objects.filter(obj => obj.type === 'textbox' || obj.type === 'group' || (obj.type === 'rect' && obj.width === 1080 && obj.fill === 'transparent'));
+        const elementsToRemove = objects.filter(obj => obj.type === 'textbox' || obj.type === 'group' || (obj.type === 'rect' && obj.width > 1000 && obj.fill === 'transparent'));
         elementsToRemove.forEach(obj => canvas.remove(obj));
         canvas.renderAll();
     }
@@ -221,10 +215,11 @@
             "ganchoSuperior": "Texto de impacto arriba",
             "llamadaInferior": "Texto de CTA abajo",
             "tipografia": "Bebas Neue", 
-            "colorTexto": "#FFFFFF", 
+            "colorGancho": "Elige HEX: #FFFFFF (Blanco), #06b6d4 (Cyan) o #FDE047 (Amarillo)", 
+            "colorFondoCTA": "Elige HEX: rgba(0,0,0,0.85) (Negro), #06b6d4 (Cyan) o #E11D48 (Rojo)",
             "nivelOscurecimiento": 0.2
         }
-        (nivelOscurecimiento max 0.4).`;
+        (nivelOscurecimiento max 0.4). Combina bien los colores para que no sea monótono.`;
 
         const modelsToTry = ['gemini-3.6-flash', 'gemini-3.6-pro'];
         let success = false;
@@ -280,81 +275,113 @@
     function aplicarDisenoIA(config) {
         renderBaseImage(config.nivelOscurecimiento || 0.2);
 
-        // 1. TEXTOS IA
+        // 1. TEXTO DINÁMICO (Adiós a la monotonía)
         const textTop = new fabric.Textbox((config.ganchoSuperior || "").toUpperCase(), {
             left: 540, top: 200,
             originX: 'center', originY: 'top',
             width: 900,
             fontSize: config.tipografia === 'Bebas Neue' ? 120 : 80,
             fontFamily: config.tipografia || 'Montserrat',
-            fontWeight: 'bold',
-            fill: config.colorTexto || '#ffffff',
+            fontWeight: '900',
+            fill: config.colorGancho || '#ffffff',
             textAlign: 'center',
-            shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.8)', blur: 15, offsetX: 0, offsetY: 4 })
+            shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.9)', blur: 15, offsetX: 0, offsetY: 5 })
         });
 
+        // Aseguramos que el texto del CTA contraste con el fondo que elija la IA
+        const isBgLight = config.colorFondoCTA === '#06b6d4' || config.colorFondoCTA === '#FDE047';
+        
         const textBottom = new fabric.Textbox(config.llamadaInferior || "", {
-            left: 540, top: 1750, // Subido un poco para dejarle espacio al logo
+            left: 540, top: 1720, 
             originX: 'center', originY: 'bottom',
             width: 900,
-            fontSize: 50,
+            fontSize: 45,
             fontFamily: 'Montserrat', 
             fontWeight: 'bold',
-            fill: '#ffffff',
+            fill: isBgLight ? '#000000' : '#ffffff',
             textAlign: 'center',
-            backgroundColor: 'rgba(0,0,0,0.85)',
-            padding: 20,
+            backgroundColor: config.colorFondoCTA || 'rgba(0,0,0,0.85)',
+            padding: 25,
             shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.5)', blur: 10 })
         });
 
-        // 2. LOGO VECTORIAL GESTO SMART
+        // 2. LOGO VECTORIAL IDÉNTICO AL ORIGINAL
         const logoBg = new fabric.Rect({
             left: 0, top: 0,
-            width: 140, height: 140,
-            rx: 40, ry: 40, // Bordes redondeados
-            fill: '#0f172a', // Azul muy oscuro
-            stroke: '#06b6d4', // Borde cyan
-            strokeWidth: 10,
+            width: 320, height: 320,
+            rx: 65, ry: 65, 
+            fill: '#0d111c', // Fondo azul muy oscuro casi negro
             originX: 'center', originY: 'center'
         });
 
-        const logoLetter = new fabric.Text('G', {
-            left: 0, top: 0,
+        const cyanBox = new fabric.Rect({
+            left: 0, top: -45,
+            width: 150, height: 150,
+            rx: 35, ry: 35,
+            fill: 'transparent',
+            stroke: '#06b6d4',
+            strokeWidth: 9,
+            originX: 'center', originY: 'center'
+        });
+
+        const letterG = new fabric.Text('G', {
+            left: -2, top: -45,
             fontFamily: 'Montserrat',
             fontWeight: '900',
             fontStyle: 'italic',
-            fontSize: 100,
+            fontSize: 90,
             fill: '#ffffff',
             originX: 'center', originY: 'center'
         });
 
-        const logoDot = new fabric.Circle({
-            left: 65, top: -65, // Esquina superior derecha del logo
-            radius: 16,
+        const dot = new fabric.Circle({
+            left: 75, top: -120, 
+            radius: 12,
             fill: '#06b6d4',
             originX: 'center', originY: 'center'
         });
 
-        const logoGroup = new fabric.Group([logoBg, logoLetter, logoDot], {
-            left: 950, top: 1800, // Esquina inferior derecha de la placa
+        const textGesto = new fabric.Text('GESTO', {
+            left: 0, top: 65,
+            fontFamily: 'Montserrat',
+            fontWeight: '400',
+            fontSize: 42,
+            fill: '#ffffff',
+            originX: 'center', originY: 'center'
+        });
+
+        const textSmart = new fabric.Text('SMART', {
+            left: 0, top: 110,
+            fontFamily: 'Montserrat',
+            fontWeight: '400',
+            fontSize: 42,
+            fill: '#ffffff',
+            originX: 'center', originY: 'center'
+        });
+
+        const logoGroup = new fabric.Group([logoBg, cyanBox, letterG, dot, textGesto, textSmart], {
+            left: 920, top: 1750, 
+            scaleX: 0.5, scaleY: 0.5,
             originX: 'center', originY: 'center',
-            shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.6)', blur: 20, offsetX: 0, offsetY: 10 }),
-            selectable: true // Te dejo moverlo por si te tapa algo de la foto
+            shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.8)', blur: 20 }),
+            selectable: true 
         });
 
         canvas.add(textTop);
         canvas.add(textBottom);
         canvas.add(logoGroup);
 
-        // 3. MARCO OPCIONAL (Controlado por el switch)
+        // 3. MARCO PERIMETRAL AJUSTADO HACIA ADENTRO
         const frameToggle = document.getElementById('frameToggle').checked;
         if (frameToggle) {
+            const strokeW = 30; // Grosor del marco
             const frame = new fabric.Rect({
-                left: 0, top: 0,
-                width: 1080, height: 1920,
+                // Se dibuja desplazado la mitad del grosor para que no se corte hacia afuera
+                left: strokeW / 2, top: strokeW / 2,
+                width: 1080 - strokeW, height: 1920 - strokeW,
                 fill: 'transparent',
-                stroke: '#06b6d4', // Color cyan igual al logo
-                strokeWidth: 40, // Borde perimetral
+                stroke: '#06b6d4',
+                strokeWidth: strokeW, 
                 selectable: false, evented: false
             });
             canvas.add(frame);
