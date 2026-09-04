@@ -33,7 +33,7 @@
     <div id="configModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-slate-900 border border-slate-700 p-6 rounded-2xl w-full max-w-sm">
             <h2 class="font-bold text-lg mb-2 text-white">Motor IA (Google Gemini)</h2>
-            <p class="text-xs text-slate-400 mb-4">La app incluye Auto-Reintento por si los servidores están saturados.</p>
+            <p class="text-xs text-slate-400 mb-4">Reintentos agresivos activados para sortear cuellos de botella.</p>
             
             <label class="block text-xs font-bold text-slate-400 mb-1">API Key de Gemini</label>
             <input type="password" id="apiKeyInput" placeholder="AIzaSy..." class="w-full bg-slate-800 border border-slate-700 p-3 rounded-lg text-sm text-white outline-none mb-6 focus:border-sky-500">
@@ -115,7 +115,7 @@
         toggleConfig();
     }
 
-    // CONTEXTO CENTRAL DEL PRODUCTO (Para que la IA sepa qué vende)
+    // CONTEXTO CENTRAL DEL PRODUCTO
     const PRODUCT_CONTEXT = `CONTEXTO OBLIGATORIO DEL PRODUCTO: Estás creando publicidad para "Gesto Smart". Es un software web de gestión, ventas y control de stock ultra ágil, diseñado específicamente para dueños de comercios minoristas y mayoristas que quieren evitar las fricciones e interfaces complejas. Permite calcular precios rápido, manejar el inventario y se ve perfecto tanto en PC como en celulares.`;
 
     const magicPrompts = {
@@ -173,6 +173,14 @@
         canvas.renderAll();
     }
 
+    // Limpia los textos viejos del canvas antes de reintentar
+    function clearOldTexts() {
+        const objects = canvas.getObjects();
+        const textObjects = objects.filter(obj => obj.type === 'textbox');
+        textObjects.forEach(obj => canvas.remove(obj));
+        canvas.renderAll();
+    }
+
     const delay = ms => new Promise(res => setTimeout(res, ms));
 
     async function generateWithAI() {
@@ -191,6 +199,9 @@
         btn.disabled = true;
         btnText.innerText = "Pensando copy...";
         spinner.classList.remove('hidden');
+
+        // Borramos el texto viejo para no confundir visualmente si hay un error
+        clearOldTexts();
 
         let hiddenContext = "";
         if (magicPrompts[userInput]) {
@@ -227,7 +238,8 @@
         let lastError = "";
 
         for (const model of modelsToTry) {
-            let retries = 2;
+            let retries = 4; // Aumentado a 4 intentos agresivos
+            let retryWait = 3000;
 
             while (retries > 0 && !success) {
                 try {
@@ -261,8 +273,9 @@
                     
                 } catch (error) {
                     if (error.message.toLowerCase().includes('high demand') || error.message.includes('503') || error.message.includes('429')) {
-                        btnText.innerText = "Servidor saturado. Reintentando...";
-                        await delay(3000); 
+                        btnText.innerText = `Saturado. Reintento ${5 - retries}/4...`;
+                        await delay(retryWait); 
+                        retryWait += 3000; // Backoff: 3s, luego 6s, luego 9s
                         retries--;
                         lastError = "Los servidores de Google están muy saturados. Por favor, intentá de nuevo en unos minutos.";
                     } else if (error.message.toLowerCase().includes('not found')) {
