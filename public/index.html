@@ -10,14 +10,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
 
     <style>
-        body { background-color: #0b0f19; color: #f8fafc; font-family: 'Montserrat', sans-serif; }
-        .canvas-wrapper { width: 100%; max-width: 400px; margin: 0 auto; position: relative; box-shadow: 0 20px 40px rgba(0,0,0,0.8); border-radius: 16px; overflow: hidden; border: 1px solid #1e293b; background-color: #000; transition: aspect-ratio 0.3s ease; }
+        body { background-color: #0b0f19; color: #f8fafc; font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
+        .canvas-wrapper { width: 100%; height: auto; position: relative; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.9); border-radius: 12px; overflow: hidden; border: 1px solid #1e293b; background-color: #000; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; }
         .canvas-container { width: 100% !important; height: 100% !important; }
         .canvas-container canvas { width: 100% !important; height: 100% !important; object-fit: contain; }
         .spinner { border: 3px solid rgba(56, 189, 248, 0.3); border-left-color: #38bdf8; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        .magic-btn { background: #1e293b; border: 1px solid #334155; color: #94a3b8; font-size: 11px; padding: 10px; border-radius: 8px; cursor: pointer; transition: all 0.2s; font-weight: bold; }
+        .magic-btn { background: #1e293b; border: 1px solid #334155; color: #94a3b8; font-size: 12px; padding: 10px; border-radius: 8px; cursor: pointer; transition: all 0.2s; font-weight: bold; width: 100%; }
         .magic-btn:hover { background: #06b6d4; color: #0b0f19; border-color: #06b6d4; }
         
         .command-item { cursor: pointer; transition: all 0.2s; }
@@ -27,19 +27,21 @@
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="flex flex-col min-h-screen">
+<body class="flex flex-col h-screen">
 
-    <header class="p-4 flex justify-between items-center border-b border-slate-800 bg-slate-900/50">
-        <div>
-            <h1 class="text-base font-black text-white tracking-tight">GESTO SMART <span class="text-cyan-400">CAMPAIGNS</span></h1>
+    <!-- Header -->
+    <header class="p-4 flex justify-between items-center border-b border-slate-800 bg-slate-900 z-10 shrink-0">
+        <div class="flex items-center gap-3">
+            <h1 class="text-xl font-black text-white tracking-tight">GESTO SMART <span class="text-cyan-400">STUDIO</span></h1>
         </div>
         <button onclick="toggleConfig()" class="text-slate-400 hover:text-white text-xl">⚙️</button>
     </header>
 
+    <!-- Modal API -->
     <div id="configModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-slate-900 border border-slate-700 p-6 rounded-2xl w-full max-w-sm">
-            <h2 class="font-bold text-lg mb-4 text-white">Motor IA (Gemini)</h2>
-            <input type="password" id="apiKeyInput" placeholder="API Key..." class="w-full bg-slate-800 border border-slate-700 p-3 rounded-lg text-sm text-white outline-none mb-6 focus:border-cyan-500">
+            <h2 class="font-bold text-lg mb-4 text-white">Conexión API (Gemini)</h2>
+            <input type="password" id="apiKeyInput" placeholder="Pega tu API Key..." class="w-full bg-slate-800 border border-slate-700 p-3 rounded-lg text-sm text-white outline-none mb-6 focus:border-cyan-500">
             <div class="flex gap-2">
                 <button onclick="toggleConfig()" class="flex-1 bg-slate-700 p-3 rounded-lg font-bold text-sm hover:bg-slate-600">Cerrar</button>
                 <button onclick="saveApiKey()" class="flex-1 bg-cyan-500 text-slate-900 p-3 rounded-lg font-bold text-sm hover:bg-cyan-400">Guardar</button>
@@ -49,78 +51,102 @@
 
     <!-- Directorio 99 Prompts -->
     <div id="promptModal" class="hidden fixed inset-0 bg-black/90 z-50 flex flex-col p-4 backdrop-blur-md">
-        <div class="max-w-md w-full mx-auto flex flex-col h-full bg-slate-900 border border-slate-700 rounded-2xl overflow-hidden">
+        <div class="max-w-2xl w-full mx-auto flex flex-col h-full bg-slate-900 border border-slate-700 rounded-2xl overflow-hidden mt-10 mb-10">
             <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-950">
-                <h2 class="font-bold text-white">📚 Directorio de 99 Prompts</h2>
-                <button onclick="togglePromptModal()" class="text-slate-400 hover:text-white font-bold text-lg">✕</button>
+                <h2 class="font-bold text-white text-lg">📚 Directorio de 99 Comandos Estratégicos</h2>
+                <button onclick="togglePromptModal()" class="text-slate-400 hover:text-white font-bold text-2xl">✕</button>
             </div>
-            <div class="p-3 bg-slate-900">
-                <input type="text" id="promptSearch" onkeyup="filterPrompts()" placeholder="Buscar comando... (ej: viral, ceo, copy)" class="w-full bg-slate-800 border border-slate-700 p-3 rounded-lg text-sm text-white outline-none focus:border-cyan-500">
+            <div class="p-4 bg-slate-900">
+                <input type="text" id="promptSearch" onkeyup="filterPrompts()" placeholder="Buscar comando... (ej: tiktok, ceo, dolor)" class="w-full bg-slate-800 border border-slate-700 p-4 rounded-xl text-base text-white outline-none focus:border-cyan-500">
             </div>
-            <div id="promptList" class="flex-1 overflow-y-auto p-2 scrollbar-hide">
-                <!-- Se inyecta por JS -->
+            <div id="promptList" class="flex-1 overflow-y-auto p-2 scrollbar-hide grid grid-cols-2 gap-2">
+                <!-- Se inyecta JS -->
             </div>
         </div>
     </div>
 
-    <main class="flex-1 flex flex-col p-4 w-full max-w-md mx-auto gap-4 mb-32">
+    <!-- Layout Principal: 3 Columnas -->
+    <main class="flex-1 flex overflow-hidden">
         
-        <div class="bg-slate-900/50 p-4 rounded-2xl border border-slate-800 shadow-lg">
+        <!-- COLUMNA IZQUIERDA: Herramientas -->
+        <aside class="w-80 flex flex-col gap-4 p-4 border-r border-slate-800 bg-slate-900/30 overflow-y-auto scrollbar-hide shrink-0">
             
-            <div class="flex gap-2 mb-3">
-                <label class="flex-[1] bg-slate-800 hover:bg-slate-700 transition text-center p-3 rounded-xl border border-dashed border-slate-500 cursor-pointer flex items-center justify-center">
-                    <span class="text-sm font-bold text-cyan-400">📁 Subir Captura</span>
-                    <input type="file" id="imageLoader" accept="image/*" class="hidden">
-                </label>
-            </div>
+            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Configuración Visual</h2>
+            
+            <label class="w-full bg-slate-800 hover:bg-slate-700 transition text-center p-4 rounded-xl border-2 border-dashed border-slate-500 cursor-pointer flex items-center justify-center gap-2 shadow-sm">
+                <span class="text-base font-bold text-cyan-400">📁 Subir Captura Base</span>
+                <input type="file" id="imageLoader" accept="image/*" class="hidden">
+            </label>
 
-            <div class="grid grid-cols-2 gap-2 mb-3">
-                <select id="globalFont" class="bg-slate-950 border border-slate-700 p-2 rounded-lg text-xs text-white outline-none focus:border-cyan-500">
+            <div class="grid grid-cols-1 gap-3">
+                <select id="globalFont" class="bg-slate-950 border border-slate-700 p-3 rounded-lg text-sm text-white outline-none focus:border-cyan-500 cursor-pointer">
                     <option value="Playfair Display">Fuente: Playfair Display</option>
                     <option value="Montserrat">Fuente: Montserrat</option>
                     <option value="Cinzel">Fuente: Cinzel</option>
                 </select>
-                <select id="globalFormat" class="bg-slate-950 border border-slate-700 p-2 rounded-lg text-xs text-white outline-none focus:border-cyan-500" onchange="setFormat(this.value)">
-                    <option value="9:16">Formato: Story/Reel</option>
-                    <option value="1:1">Formato: Post Cuadrado</option>
+                <select id="globalFormat" class="bg-slate-950 border border-slate-700 p-3 rounded-lg text-sm text-white outline-none focus:border-cyan-500 cursor-pointer" onchange="setFormat(this.value)">
+                    <option value="9:16">Formato: Story/Reel (Vertical)</option>
+                    <option value="1:1">Formato: Post (Cuadrado)</option>
                 </select>
             </div>
 
-            <div class="grid grid-cols-3 gap-2 mb-3">
-                <button onclick="togglePromptModal()" class="magic-btn col-span-3 bg-cyan-950 border-cyan-800 text-cyan-100 hover:bg-cyan-900 text-center py-3">📚 Explorar Directorio de 99 Comandos</button>
-                <button onclick="applyMagicCommand('/dolor')" class="magic-btn text-center">🛑 Dolor</button>
-                <button onclick="applyMagicCommand('/beneficio')" class="magic-btn text-center">✨ Beneficio</button>
-                <button onclick="applyMagicCommand('/autoridad')" class="magic-btn text-center">🏆 Autoridad</button>
+            <hr class="border-slate-800 my-2">
+
+            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Estrategia de Campaña</h2>
+
+            <button onclick="togglePromptModal()" class="w-full bg-cyan-950 border border-cyan-800 text-cyan-100 hover:bg-cyan-900 font-bold p-3 rounded-xl transition flex justify-center items-center gap-2">
+                📚 Explorar 99 Comandos
+            </button>
+
+            <div class="grid grid-cols-2 gap-2">
+                <button onclick="applyMagicCommand('/dolor')" class="magic-btn">🛑 Dolor</button>
+                <button onclick="applyMagicCommand('/beneficio')" class="magic-btn">✨ Beneficio</button>
             </div>
 
-            <textarea id="aiPrompt" placeholder="Instrucción (Podés usar comandos o texto libre)..." class="w-full h-20 bg-slate-950 border border-slate-700 p-3 rounded-xl text-sm text-white outline-none resize-none focus:border-cyan-500"></textarea>
+            <textarea id="aiPrompt" placeholder="Escribí de qué trata la campaña o seleccioná un comando arriba..." class="w-full flex-1 min-h-[120px] bg-slate-950 border border-slate-700 p-3 rounded-xl text-sm text-white outline-none resize-none focus:border-cyan-500"></textarea>
             
-            <button id="generateBtn" onclick="generateWithAI()" class="w-full mt-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-bold p-3 rounded-xl shadow-lg shadow-cyan-500/20 flex justify-center items-center gap-2 hover:from-cyan-500 hover:to-blue-500">
-                <span id="btnText">✨ Generar Campaña Completa</span>
+            <button id="generateBtn" onclick="generateWithAI()" class="w-full bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-bold p-4 rounded-xl shadow-lg shadow-cyan-500/20 flex justify-center items-center gap-2 hover:from-cyan-500 hover:to-blue-500 transition mt-auto">
+                <span id="btnText">✨ Crear Campaña</span>
                 <div id="loadingSpinner" class="spinner hidden"></div>
             </button>
-        </div>
+        </aside>
 
-        <!-- Resultados -->
-        <div id="resultsArea" class="hidden flex-col gap-4">
-            
-            <div id="canvasWrapper" class="canvas-wrapper" style="aspect-ratio: 9/16;">
+        <!-- COLUMNA CENTRAL: Lienzo (Canvas) -->
+        <section class="flex-1 flex flex-col items-center justify-center bg-slate-950 p-6 overflow-hidden relative">
+            <div id="canvasWrapper" class="canvas-wrapper w-full max-h-full" style="aspect-ratio: 9/16; max-width: calc(100vh * (9/16));">
+                <!-- Se inyecta un canvas del 100% del padre -->
                 <canvas id="mainCanvas"></canvas>
             </div>
+            
+            <!-- Panel Flotante Minimalista de Edición -->
+            <div id="editPanel" class="hidden absolute bottom-6 w-full max-w-md bg-slate-900/90 backdrop-blur-md border border-slate-700 p-3 rounded-2xl shadow-2xl z-20 flex-col gap-3">
+                <input type="text" id="textEditor" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-sm text-white outline-none focus:border-cyan-500 font-bold" placeholder="Editar texto...">
+                <div class="flex items-center gap-4 px-2">
+                    <span class="text-xs font-bold text-slate-400">Tamaño</span>
+                    <input type="range" id="sizeSlider" min="20" max="150" value="80" class="flex-1 accent-cyan-500">
+                </div>
+            </div>
+        </section>
 
-            <button onclick="downloadImage()" class="w-full bg-white text-slate-900 p-4 rounded-xl font-black text-sm hover:bg-slate-200 transition">
-                📥 Descargar Placa
+        <!-- COLUMNA DERECHA: Resultados & Copy -->
+        <aside class="w-80 flex flex-col gap-4 p-4 border-l border-slate-800 bg-slate-900/30 overflow-y-auto shrink-0">
+            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Exportar</h2>
+            
+            <button onclick="downloadImage()" class="w-full bg-white text-slate-900 font-black p-4 rounded-xl shadow-md hover:bg-slate-200 transition flex justify-center items-center gap-2">
+                📥 Descargar Placa HD
             </button>
 
-            <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 mt-2">
-                <h3 class="text-xs font-bold text-cyan-400 mb-2 uppercase">📝 Copy para Instagram / TikTok</h3>
-                <textarea id="socialCaption" readonly class="w-full h-48 bg-slate-950 border border-slate-800 p-3 rounded-lg text-sm text-slate-300 outline-none resize-none"></textarea>
-                <button onclick="copyCaption()" class="w-full mt-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold p-2 rounded-lg transition">
+            <hr class="border-slate-800 my-2">
+
+            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Copy para Redes Sociales</h2>
+            
+            <div class="flex-1 flex flex-col">
+                <textarea id="socialCaption" readonly placeholder="Aquí aparecerá el texto persuasivo listo para copiar..." class="w-full flex-1 bg-slate-950 border border-slate-800 p-4 rounded-xl text-sm text-slate-300 outline-none resize-none leading-relaxed"></textarea>
+                <button onclick="copyCaption()" class="w-full mt-3 bg-slate-800 hover:bg-slate-700 text-white font-bold p-3 rounded-xl transition flex justify-center items-center gap-2 border border-slate-700">
                     📋 Copiar Texto
                 </button>
             </div>
-
-        </div>
+        </aside>
 
     </main>
 
@@ -129,106 +155,20 @@
     let currentFormat = '9:16';
     let currentImageObj = null;
 
+    // Directorio
     const promptDictionary = {
-        "/humano": "Escritura natural y de estilo humano",
-        "/experto": "Respuestas a nivel de especialista",
-        "/ceo": "Análisis con mentalidad de fundador o CEO",
-        "/viral": "Ideas de contenido de alto impacto y viralidad",
-        "/seo": "Contenido optimizado para buscadores",
-        "/critico": "Encuentra debilidades y fallos en la idea",
-        "/maestro": "Explica de forma clara y sencilla",
-        "/el5": "Explica como si tuviera 5 años",
-        "/resumen": "La respuesta más corta y directa posible",
-        "/estrategia": "Modo de planificación a largo plazo",
-        "/redactor": "Texto persuasivo de marketing (Copywriting)",
-        "/research": "Modo de investigación profunda",
-        "/brainstorm": "Genera ideas creativas y variadas",
-        "/promptengineer": "Mejora y afina cualquier instrucción",
-        "/summarize": "Resume los puntos clave",
-        "/simplify": "Simplifica contenido complejo",
-        "/detailed": "Da una explicación comprehensiva y al detalle",
-        "/stepbystep": "Explica paso a paso el proceso",
-        "/examples": "Proporciona ejemplos prácticos y reales",
-        "/analyst": "Analiza datos o información objetivamente",
-        "/compare": "Compara múltiples opciones detalladamente",
-        "/proscons": "Muestra ventajas y desventajas",
-        "/decision": "Ayuda a tomar la mejor decisión de negocio",
-        "/planner": "Crea un plan de acción ejecutivo",
-        "/roadmap": "Crea una hoja de ruta hacia una meta",
-        "/action": "Convierte ideas en pasos de acción ejecutables",
-        "/prioritize": "Ordena tareas por importancia comercial",
-        "/productivity": "Mejora la productividad y procesos",
-        "/focus": "Identifica la tarea más importante a resolver",
-        "/time": "Crea un plan de gestión del tiempo",
-        "/learn": "Crea un plan de aprendizaje",
-        "/study": "Crea una estrategia de estudio efectiva",
-        "/quiz": "Pon a prueba conocimientos",
-        "/flashcards": "Crea tarjetas de memoria",
-        "/interview": "Simula preguntas de entrevista",
-        "/resume": "Mejora perfiles profesionales",
-        "/career": "Da orientación profesional",
-        "/mentor": "Responde como un mentor experimentado",
-        "/coach": "Ofrece coaching práctico de negocios",
-        "/consultant": "Brinda recomendaciones como consultor B2B",
-        "/editor": "Mejora la claridad y calidad del texto",
-        "/proofread": "Corrige gramática y ortografía",
-        "/rewrite": "Reescribe con palabras más potentes",
-        "/professional": "Haz que la escritura sea corporativa/profesional",
-        "/casual": "Haz que la escritura sea conversacional",
-        "/friendly": "Haz que la escritura sea cálida y amigable",
-        "/persuasive": "Haz que el mensaje sea hipnótico y convincente",
-        "/concise": "Elimina palabras innecesarias, ve al grano",
-        "/polish": "Refina la versión final del copy",
-        "/tone": "Ajusta el tono de la comunicación",
-        "/storyteller": "Convierte la información en una historia atractiva",
-        "/hook": "Crea ganchos visuales que capten la atención al instante",
-        "/headline": "Genera titulares poderosos e irreversibles",
-        "/caption": "Escribe subtítulos optimizados para redes",
-        "/linkedin": "Crea contenido orientado a LinkedIn B2B",
-        "/instagram": "Crea contenido estético para Instagram",
-        "/youtube": "Crea contenido para guiones de YouTube",
-        "/reels": "Genera ideas para videos cortos verticales",
-        "/script": "Escribe el guion para un Reel o TikTok",
-        "/email": "Escribe un correo electrónico de venta/onboarding",
-        "/sales": "Crea mensajes enfocados 100% en cerrar ventas",
-        "/offer": "Crea una oferta irresistible (Mafia Offer)",
-        "/brand": "Desarrolla el mensaje core de la marca",
-        "/customer": "Piensa estrictamente desde los dolores del cliente",
-        "/audience": "Analiza a la audiencia objetivo de Gesto Smart",
-        "/competitor": "Analiza cómo ganarle a la competencia",
-        "/market": "Analiza oportunidades del mercado retail",
-        "/startup": "Piensa como estratega ágil de startups",
-        "/business": "Desarrolla ideas de expansión de negocio",
-        "/pricing": "Desarrolla estrategias de percepción de precio",
-        "/funnel": "Construye la bajada de un embudo de conversión",
-        "/growth": "Encuentra hacks de crecimiento rápido",
-        "/content": "Construye los pilares de contenido",
-        "/calendar": "Crea calendario de publicaciones",
-        "/ideas": "Genera ideas frescas y disruptivas",
-        "/creative": "Piensa de manera creativa, out of the box",
-        "/unpopular": "Cuestiona el pensamiento convencional del sector",
-        "/devilsadvocate": "Encuentra los puntos débiles de este argumento",
-        "/contrarian": "Ve en contra de lo que todos los sistemas dicen",
-        "/assumptions": "Identifica y rompe suposiciones ocultas",
-        "/risks": "Identifica fricciones o riesgos potenciales",
-        "/factcheck": "Valida las afirmaciones técnicas",
-        "/verify": "Pide verificación de datos",
-        "/logic": "Evalúa el razonamiento de la oferta",
-        "/rootcause": "Identifica el problema real (la raíz) del usuario",
-        "/debug": "Encuentra problemas en el flujo",
-        "/solution": "Genera soluciones prácticas y rápidas",
-        "/alternative": "Sugiere caminos alternativos mejores",
-        "/optimizar": "Mejora y hace más eficiente esta idea",
-        "/automatizar": "Cómo quitar fricción manual a esto",
-        "/plantilla": "Crea una estructura o plantilla reutilizable",
-        "/lista": "Arma un checklist práctico",
-        "/marco": "Construye un framework mental estructurado",
-        "/matriz": "Cruza variables en una matriz de decisión",
-        "/tabla": "Estructura la info en formato tabla",
-        "/json": "Estructura puramente en formato JSON",
-        "/simulacion": "Simula el escenario de un cliente usándolo",
-        "/invertir": "Ingeniería inversa desde el resultado esperado",
-        "/definitivo": "Aplica todo el conocimiento para la respuesta magistral final"
+        "/humano": "Escritura natural", "/experto": "Nivel de especialista", "/ceo": "Mentalidad de fundador",
+        "/viral": "Alto impacto", "/seo": "Optimizado para SEO", "/maestro": "Explica fácil", "/el5": "Como a un niño",
+        "/resumen": "Corto y directo", "/redactor": "Copywriting B2B", "/brainstorm": "Ideas creativas",
+        "/stepbystep": "Paso a paso", "/proscons": "Ventajas/Desventajas", "/decision": "Mejor decisión",
+        "/planner": "Plan de acción", "/productivity": "Mejora procesos", "/time": "Gestión de tiempo",
+        "/casual": "Conversacional", "/friendly": "Cálido", "/persuasive": "Convincente", "/concise": "Ve al grano",
+        "/storyteller": "Cuenta historia", "/hook": "Ganchos visuales", "/headline": "Titulares",
+        "/linkedin": "LinkedIn B2B", "/instagram": "Instagram aesthetic", "/reels": "Ideas Reels",
+        "/sales": "Cerrar ventas", "/offer": "Oferta irresistible", "/customer": "Dolor del cliente",
+        "/growth": "Hacks rápidos", "/calendar": "Calendario post", "/ideas": "Disruptivo",
+        "/contrarian": "Pensamiento opuesto", "/assumptions": "Rompe supuestos", "/rootcause": "Problema raíz",
+        "/solution": "Solución rápida", "/automatizar": "Sin manual", "/simulacion": "Simula usuario"
     };
 
     function initPromptDictionary() {
@@ -236,8 +176,8 @@
         list.innerHTML = '';
         Object.keys(promptDictionary).forEach(key => {
             const div = document.createElement('div');
-            div.className = 'command-item p-3 border-b border-slate-800 text-sm';
-            div.innerHTML = `<span class="font-bold text-cyan-400">${key}</span> <span class="text-slate-300 ml-2">${promptDictionary[key]}</span>`;
+            div.className = 'command-item p-3 border border-slate-800 rounded-lg text-sm bg-slate-950 flex flex-col gap-1';
+            div.innerHTML = `<span class="font-black text-cyan-400 text-base">${key}</span><span class="text-slate-400 text-xs">${promptDictionary[key]}</span>`;
             div.onclick = () => {
                 const currentVal = document.getElementById('aiPrompt').value;
                 document.getElementById('aiPrompt').value = `${key} ${currentVal.replace(/^\/\w+\s*/, '')}`.trim();
@@ -251,20 +191,14 @@
         const input = document.getElementById('promptSearch').value.toLowerCase();
         const items = document.querySelectorAll('.command-item');
         items.forEach(item => {
-            if (item.innerText.toLowerCase().includes(input)) {
-                item.style.display = "block";
-            } else {
-                item.style.display = "none";
-            }
+            item.style.display = item.innerText.toLowerCase().includes(input) ? "flex" : "none";
         });
     }
 
     function togglePromptModal() {
         const modal = document.getElementById('promptModal');
         modal.classList.toggle('hidden');
-        if (!modal.classList.contains('hidden')) {
-            document.getElementById('promptSearch').focus();
-        }
+        if (!modal.classList.contains('hidden')) document.getElementById('promptSearch').focus();
     }
 
     window.onload = initPromptDictionary;
@@ -282,19 +216,30 @@
     }
 
     const canvas = new fabric.Canvas('mainCanvas', { preserveObjectStacking: true, backgroundColor: '#000' });
-    canvas.setWidth(1080);
-    canvas.setHeight(1920);
+    
+    // Función para redimensionar el canvas real dentro del wrapper visual
+    function resizeCanvas() {
+        const wrapper = document.getElementById('canvasWrapper');
+        canvas.setWidth(1080);
+        if (currentFormat === '9:16') {
+            canvas.setHeight(1920);
+            wrapper.style.aspectRatio = '9/16';
+            wrapper.style.maxWidth = 'calc(100vh * (9/16))';
+        } else {
+            canvas.setHeight(1080);
+            wrapper.style.aspectRatio = '1/1';
+            wrapper.style.maxWidth = 'calc(100vh * (1/1))';
+        }
+        canvas.setZoom(1); // El css object-fit se encarga del escalado visual
+        if (currentImageObj) renderBaseImage(currentImageObj.lastOverlayOpacity || 0.4);
+    }
 
     function setFormat(format) {
         currentFormat = format;
-        const wrapper = document.getElementById('canvasWrapper');
-        if (format === '9:16') {
-            canvas.setWidth(1080); canvas.setHeight(1920); wrapper.style.aspectRatio = '9/16';
-        } else {
-            canvas.setWidth(1080); canvas.setHeight(1080); wrapper.style.aspectRatio = '1/1';
-        }
-        if (currentImageObj) renderBaseImage(currentImageObj.lastOverlayOpacity || 0.4);
+        resizeCanvas();
     }
+    
+    window.addEventListener('resize', resizeCanvas);
 
     document.getElementById('imageLoader').addEventListener('change', function (e) {
         const file = e.target.files[0];
@@ -303,9 +248,7 @@
         reader.onload = function (f) {
             fabric.Image.fromURL(f.target.result, function (img) {
                 currentImageObj = img;
-                renderBaseImage(0.4);
-                document.getElementById('resultsArea').classList.remove('hidden');
-                document.getElementById('resultsArea').classList.add('flex');
+                resizeCanvas();
             });
         };
         reader.readAsDataURL(file);
@@ -342,6 +285,43 @@
         canvas.renderAll();
     }
 
+    const editPanel = document.getElementById('editPanel');
+    const textEditor = document.getElementById('textEditor');
+    const sizeSlider = document.getElementById('sizeSlider');
+
+    canvas.on('selection:created', handleSelection);
+    canvas.on('selection:updated', handleSelection);
+    canvas.on('selection:cleared', function() { editPanel.classList.add('hidden'); });
+
+    function handleSelection() {
+        const activeObj = canvas.getActiveObject();
+        if (activeObj && activeObj.type === 'textbox') {
+            editPanel.classList.remove('hidden');
+            editPanel.classList.add('flex');
+            textEditor.value = activeObj.text;
+            sizeSlider.value = activeObj.fontSize;
+        } else {
+            editPanel.classList.add('hidden');
+            editPanel.classList.remove('flex');
+        }
+    }
+
+    textEditor.addEventListener('input', function() {
+        const activeObj = canvas.getActiveObject();
+        if (activeObj && activeObj.type === 'textbox') {
+            activeObj.set({ text: this.value });
+            canvas.renderAll();
+        }
+    });
+
+    sizeSlider.addEventListener('input', function() {
+        const activeObj = canvas.getActiveObject();
+        if (activeObj && activeObj.type === 'textbox') {
+            activeObj.set({ fontSize: parseInt(this.value) });
+            canvas.renderAll();
+        }
+    });
+
     function applyMagicCommand(command) { document.getElementById('aiPrompt').value = command; }
 
     const delay = ms => new Promise(res => setTimeout(res, ms));
@@ -349,13 +329,13 @@
     async function generateWithAI() {
         let userInput = document.getElementById('aiPrompt').value.trim();
         if (!currentImageObj) return alert('Primero subí una captura del sistema.');
-        if (!userInput) return alert('Escribí de qué trata la campaña o usá un comando.');
+        if (!userInput) return alert('Escribí de qué trata la campaña.');
         if (!apiKey) { toggleConfig(); return alert('Falta tu API Key de Gemini.'); }
 
         const btn = document.getElementById('generateBtn');
         const btnText = document.getElementById('btnText');
         const spinner = document.getElementById('loadingSpinner');
-        btn.disabled = true; btnText.innerText = "Creando Campaña..."; spinner.classList.remove('hidden');
+        btn.disabled = true; btnText.innerText = "Creando..."; spinner.classList.remove('hidden');
 
         canvas.getObjects().filter(obj => obj.type === 'textbox' || obj.type === 'group').forEach(obj => canvas.remove(obj));
 
@@ -363,29 +343,29 @@
         let strategyContext = userInput;
         if (extractedCommand) {
             let instructionClean = userInput.slice(extractedCommand.length).trim();
-            strategyContext = `Asume el rol/estrategia de: [${promptDictionary[extractedCommand]}]. Objetivo específico: ${instructionClean}`;
+            strategyContext = `Enfoque: [${promptDictionary[extractedCommand]}]. Objetivo: ${instructionClean}`;
         }
 
-        const PRODUCT_CONTEXT = `Gesto Smart es un sistema web de gestión, ventas y control de stock altamente intuitivo para comercios, reemplaza Excel y elimina fricciones operativas.`;
+        const PRODUCT_CONTEXT = `Gesto Smart: App B2B ágil, gestión stock/ventas, sin fricción.`;
 
-        const systemInstructions = `Eres un Growth Marketer B2B Senior. ${PRODUCT_CONTEXT}
-        ESTRATEGIA REQUERIDA: ${strategyContext}
+        const systemInstructions = `Eres Marketer Senior B2B. ${PRODUCT_CONTEXT}
+        ESTRATEGIA: ${strategyContext}
         
-        Debes generar:
-        1. Una "fraseBomba" visual (máximo 5-7 palabras). Central, corta, directa. Que frene el scroll.
-        2. "copyInstagram": Texto persuasivo completo para publicar, usando emojis, espaciado visual, hashtags y un CTA fuerte al final. Trata de 'vos' o 'tú'.
-        3. "paletaElegida": Aleatorio 1 (Blanco puro), 2 (Amarillo Pastel), 3 (Rosa), o 4 (Verde).
+        Genera:
+        1. "fraseBomba": Visual, directa, frenar scroll (max 6 palabras).
+        2. "copyInstagram": Texto post (emojis, espacios, hashtags).
+        3. "paletaElegida": Aleatorio de 1 a 4.
         
-        Devuelve ÚNICAMENTE un JSON válido, SIN markdown:
+        Retorna JSON puro:
         {
-            "fraseBomba": "Texto corto y explosivo",
-            "copyInstagram": "Texto persuasivo para el post...",
+            "fraseBomba": "Texto corto",
+            "copyInstagram": "Texto largo post...",
             "paletaElegida": 2,
             "nivelOscurecimiento": 0.5
         }`;
 
-        // 🚨 SOLUCIÓN DEFINITIVA DE CONEXIÓN: Solo modelos estables 🚨
-        const modelsToTry = ['gemini-1.5-flash', 'gemini-pro'];
+        // CONEXIÓN SÓLIDA - Nombres base oficiales
+        const modelsToTry = ['gemini-1.5-flash'];
         let success = false;
         let lastError = "";
 
@@ -398,7 +378,7 @@
                         body: JSON.stringify({ contents: [{ parts: [{ text: systemInstructions }] }] })
                     });
                     const data = await response.json();
-                    if (!response.ok) throw new Error(data.error?.message || "Error desconocido en la API.");
+                    if (!response.ok) throw new Error(data.error?.message || "Error API");
                     
                     let textResponse = data.candidates[0].content.parts[0].text;
                     textResponse = textResponse.replace(/```json/g, '').replace(/```/g, '').trim();
@@ -409,22 +389,15 @@
                     break; 
                 } catch (error) {
                     lastError = error.message;
-                    // Si el error es saturación, espera y reintenta
-                    if (error.message && (error.message.includes('demand') || error.message.includes('503') || error.message.includes('429'))) {
-                        btnText.innerText = `Saturado. Reintento...`;
-                        await delay(3000); 
-                        retries--;
-                    } else {
-                        // Si es cualquier otro error (como el not found), rompe el while y pasa al siguiente modelo
-                        break; 
-                    }
+                    await delay(3000); 
+                    retries--;
                 }
             }
             if (success) break; 
         }
 
-        btn.disabled = false; btnText.innerText = "✨ Generar Campaña Completa"; spinner.classList.add('hidden');
-        if (!success) alert(`Error de Conexión: ${lastError}`);
+        btn.disabled = false; btnText.innerText = "✨ Crear Campaña"; spinner.classList.add('hidden');
+        if (!success) alert(`Error: ${lastError}`);
     }
 
     function aplicarCampanaIA(config) {
@@ -444,8 +417,8 @@
         const textBomb = new fabric.Textbox((config.fraseBomba || "").toUpperCase(), {
             left: cw / 2, top: ch / 2,
             originX: 'center', originY: 'center',
-            width: cw * 0.85,
-            fontSize: isSerif ? 95 : 85,
+            width: cw * 0.90,
+            fontSize: isSerif ? 100 : 85,
             fontFamily: fontToUse,
             fontWeight: isSerif ? '700' : '900',
             fontStyle: fontToUse === 'Playfair Display' ? 'italic' : 'normal',
@@ -473,6 +446,7 @@
         canvas.add(textBomb);
         canvas.add(logoGroup);
         canvas.renderAll();
+        resizeCanvas(); // Asegura ajuste tras render
     }
 
     function copyCaption() {
@@ -480,14 +454,13 @@
         copyText.select();
         copyText.setSelectionRange(0, 99999);
         navigator.clipboard.writeText(copyText.value);
-        alert("¡Copy copiado al portapapeles!");
     }
 
     function downloadImage() {
         canvas.discardActiveObject();
         canvas.renderAll();
         const link = document.createElement('a');
-        link.download = `GestoSmart_Campaña_${Date.now()}.png`;
+        link.download = `GestoSmart_${Date.now()}.png`;
         link.href = canvas.toDataURL({ format: 'png', quality: 1, multiplier: 1 });
         document.body.appendChild(link);
         link.click();
