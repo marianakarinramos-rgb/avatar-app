@@ -54,17 +54,6 @@
                 <input type="file" id="imageLoader" accept="image/*" class="hidden">
             </label>
 
-            <!-- Switch de Marco de Marca -->
-            <div class="flex items-center justify-between bg-slate-950 p-3 rounded-xl border border-slate-800 mb-3">
-                <span class="text-xs font-bold text-slate-300 flex items-center gap-2">
-                    <div class="w-3 h-3 rounded-full bg-cyan-500"></div> Marco Gesto Smart
-                </span>
-                <label class="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" id="frameToggle" class="sr-only peer" checked>
-                    <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-500"></div>
-                </label>
-            </div>
-
             <!-- Botonera Mágica -->
             <div class="flex gap-2 overflow-x-auto pb-2 mb-2 scrollbar-hide">
                 <button onclick="applyMagicCommand('/scrollstopper')" class="magic-btn">🛑 /scrollstopper</button>
@@ -169,7 +158,7 @@
 
     function clearOldTexts() {
         const objects = canvas.getObjects();
-        const elementsToRemove = objects.filter(obj => obj.type === 'textbox' || obj.type === 'group' || (obj.type === 'rect' && obj.width > 1000 && obj.fill === 'transparent'));
+        const elementsToRemove = objects.filter(obj => obj.type === 'textbox' || obj.type === 'group');
         elementsToRemove.forEach(obj => canvas.remove(obj));
         canvas.renderAll();
     }
@@ -275,7 +264,7 @@
     function aplicarDisenoIA(config) {
         renderBaseImage(config.nivelOscurecimiento || 0.2);
 
-        // 1. TEXTO DINÁMICO (Adiós a la monotonía)
+        // 1. TEXTO DINÁMICO
         const textTop = new fabric.Textbox((config.ganchoSuperior || "").toUpperCase(), {
             left: 540, top: 200,
             originX: 'center', originY: 'top',
@@ -288,11 +277,10 @@
             shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.9)', blur: 15, offsetX: 0, offsetY: 5 })
         });
 
-        // Aseguramos que el texto del CTA contraste con el fondo que elija la IA
         const isBgLight = config.colorFondoCTA === '#06b6d4' || config.colorFondoCTA === '#FDE047';
         
         const textBottom = new fabric.Textbox(config.llamadaInferior || "", {
-            left: 540, top: 1720, 
+            left: 540, top: 1700, 
             originX: 'center', originY: 'bottom',
             width: 900,
             fontSize: 45,
@@ -305,12 +293,12 @@
             shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.5)', blur: 10 })
         });
 
-        // 2. LOGO VECTORIAL IDÉNTICO AL ORIGINAL
+        // 2. LOGO VECTORIAL (Escalado al 25% y ajustado)
         const logoBg = new fabric.Rect({
             left: 0, top: 0,
             width: 320, height: 320,
             rx: 65, ry: 65, 
-            fill: '#0d111c', // Fondo azul muy oscuro casi negro
+            fill: '#0d111c', 
             originX: 'center', originY: 'center'
         });
 
@@ -342,50 +330,35 @@
         });
 
         const textGesto = new fabric.Text('GESTO', {
-            left: 0, top: 65,
+            left: 0, top: 55,
             fontFamily: 'Montserrat',
-            fontWeight: '400',
-            fontSize: 42,
+            fontWeight: '300',
+            fontSize: 48,
             fill: '#ffffff',
             originX: 'center', originY: 'center'
         });
 
         const textSmart = new fabric.Text('SMART', {
-            left: 0, top: 110,
+            left: 0, top: 105,
             fontFamily: 'Montserrat',
-            fontWeight: '400',
-            fontSize: 42,
+            fontWeight: '300',
+            fontSize: 48,
             fill: '#ffffff',
             originX: 'center', originY: 'center'
         });
 
+        // Agrupado y reducido al 25% de su tamaño original
         const logoGroup = new fabric.Group([logoBg, cyanBox, letterG, dot, textGesto, textSmart], {
-            left: 920, top: 1750, 
-            scaleX: 0.5, scaleY: 0.5,
+            left: 960, top: 1810, // Posicionado bien en la esquina inferior derecha
+            scaleX: 0.25, scaleY: 0.25, 
             originX: 'center', originY: 'center',
-            shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.8)', blur: 20 }),
+            shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.5)', blur: 10 }),
             selectable: true 
         });
 
         canvas.add(textTop);
         canvas.add(textBottom);
         canvas.add(logoGroup);
-
-        // 3. MARCO PERIMETRAL AJUSTADO HACIA ADENTRO
-        const frameToggle = document.getElementById('frameToggle').checked;
-        if (frameToggle) {
-            const strokeW = 30; // Grosor del marco
-            const frame = new fabric.Rect({
-                // Se dibuja desplazado la mitad del grosor para que no se corte hacia afuera
-                left: strokeW / 2, top: strokeW / 2,
-                width: 1080 - strokeW, height: 1920 - strokeW,
-                fill: 'transparent',
-                stroke: '#06b6d4',
-                strokeWidth: strokeW, 
-                selectable: false, evented: false
-            });
-            canvas.add(frame);
-        }
 
         canvas.renderAll();
     }
