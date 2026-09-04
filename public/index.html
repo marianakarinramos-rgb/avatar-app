@@ -26,7 +26,6 @@
         .color-swatch { width: 24px; height: 24px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: scale 0.1s; }
         .color-swatch:hover { scale: 1.1; }
         
-        /* Ocultar barra scroll */
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
@@ -96,12 +95,10 @@
             <div id="editPanel" class="hidden absolute bottom-4 left-1/2 -translate-x-1/2 w-11/12 bg-slate-900/95 backdrop-blur-md border border-slate-700 p-3 rounded-xl shadow-2xl z-20 flex-col gap-3">
                 <input type="text" id="textEditor" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-white outline-none focus:border-cyan-500" placeholder="Editar texto...">
                 <div class="flex justify-between items-center">
-                    <!-- Selector de Tamaño -->
                     <div class="flex items-center gap-2 flex-1 mr-4">
                         <span class="text-xs text-slate-400">Aa</span>
                         <input type="range" id="sizeSlider" min="20" max="150" value="80" class="w-full accent-cyan-500">
                     </div>
-                    <!-- Paleta Rápida -->
                     <div class="flex gap-2">
                         <div onclick="setTextColor('#FFFFFF')" class="color-swatch bg-white border-slate-400"></div>
                         <div onclick="setTextColor('#FDE047')" class="color-swatch bg-yellow-300"></div>
@@ -132,7 +129,7 @@
         ctx.fillStyle = this.backgroundColor;
         if (ctx.roundRect) {
             ctx.beginPath();
-            ctx.roundRect(-dim.x / 2, -dim.y / 2, dim.x, dim.y, 25); // 25px Radio para UI Moderna
+            ctx.roundRect(-dim.x / 2, -dim.y / 2, dim.x, dim.y, 25);
             ctx.fill();
         } else {
             ctx.fillRect(-dim.x / 2, -dim.y / 2, dim.x, dim.y);
@@ -141,7 +138,7 @@
     // ==========================================
 
     let apiKey = localStorage.getItem('gesto_gemini_key') || '';
-    let currentFormat = '9:16'; // '9:16' o '1:1'
+    let currentFormat = '9:16';
     let currentImageObj = null;
 
     function toggleConfig() {
@@ -156,7 +153,6 @@
         toggleConfig();
     }
 
-    // Inicialización Canvas Alta Densidad
     const canvas = new fabric.Canvas('mainCanvas', { 
         preserveObjectStacking: true, 
         backgroundColor: '#000',
@@ -167,7 +163,6 @@
     canvas.setWidth(1080);
     canvas.setHeight(1920);
 
-    // Sistema de Formatos Manuales
     function setFormat(format) {
         currentFormat = format;
         const wrapper = document.getElementById('canvasWrapper');
@@ -209,22 +204,27 @@
     function renderBaseImage(overlayOpacity) {
         if (!currentImageObj) return;
         
-        // Limpiamos solo el fondo y el filtro oscuro
+        // Limpiamos la imagen anterior y el overlay
         const objects = canvas.getObjects();
-        const bgs = objects.filter(obj => obj.type === 'image' || (obj.type === 'rect' && obj.width >= 1080));
+        const bgs = objects.filter(obj => obj.type === 'image' || (obj.type === 'rect' && obj.fill && obj.fill.includes('rgba')));
         bgs.forEach(obj => canvas.remove(obj));
 
         currentImageObj.lastOverlayOpacity = overlayOpacity;
 
         const cw = canvas.getWidth();
         const ch = canvas.getHeight();
-        const scale = Math.max(cw / currentImageObj.width, ch / currentImageObj.height);
+        
+        // CORRECCIÓN CLAVE: Math.min ajusta la imagen para que encaje 100% sin cortes
+        const scale = Math.min(cw / currentImageObj.width, ch / currentImageObj.height);
         
         currentImageObj.set({
             originX: 'center', originY: 'center',
             left: cw / 2, top: ch / 2,
             scaleX: scale, scaleY: scale,
-            selectable: false, evented: false
+            selectable: true, // Ahora podés arrastrar y ajustar el fondo a gusto
+            evented: true,
+            hasControls: true,
+            hasBorders: true
         });
         
         canvas.add(currentImageObj);
@@ -237,13 +237,12 @@
                 selectable: false, evented: false
             });
             canvas.add(overlay);
-            // Mantenemos el overlay justo sobre la imagen
+            // Aseguramos que el overlay quede detrás de los textos pero arriba de la imagen
             canvas.moveTo(overlay, 1);
         }
         canvas.renderAll();
     }
 
-    // Lógica Panel de Edición Rápida
     const editPanel = document.getElementById('editPanel');
     const textEditor = document.getElementById('textEditor');
     const sizeSlider = document.getElementById('sizeSlider');
@@ -289,7 +288,6 @@
         }
     }
 
-    // Inserción de Texto Manual Drag&Drop
     function addFreeText() {
         const t = new fabric.Textbox("NUEVO TEXTO", {
             left: canvas.getWidth() / 2, top: canvas.getHeight() / 2,
@@ -308,7 +306,6 @@
         canvas.renderAll();
     }
 
-    // IA y Contexto
     const PRODUCT_CONTEXT = `CONTEXTO: "Gesto Smart" software ágil de gestión/ventas para comercios.`;
     const magicPrompts = {
         '/scrollstopper': "Gancho polémico sobre perder plata. CTA invita a Gesto Smart. Oscurecimiento bajo (0.3). Fuente Bebas Neue.",
@@ -419,11 +416,10 @@
             fill: isBgLight ? '#000000' : '#ffffff',
             textAlign: 'center',
             backgroundColor: config.colorFondoCTA || 'rgba(0,0,0,0.85)',
-            padding: 30, // Margen ampliado para estilo UI moderno
+            padding: 30, 
             shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.6)', blur: 15, offsetX: 0, offsetY: 10 })
         });
 
-        // Logo Minimalista Gesto Smart Vectorial (escala reducida y ajustada)
         const logoBg = new fabric.Rect({ left: 0, top: 0, width: 320, height: 320, rx: 65, ry: 65, fill: '#0d111c', originX: 'center', originY: 'center' });
         const cyanBox = new fabric.Rect({ left: 0, top: -45, width: 150, height: 150, rx: 35, ry: 35, fill: 'transparent', stroke: '#06b6d4', strokeWidth: 9, originX: 'center', originY: 'center' });
         const letterG = new fabric.Text('G', { left: -2, top: -45, fontFamily: 'Montserrat', fontWeight: '900', fontStyle: 'italic', fontSize: 90, fill: '#ffffff', originX: 'center', originY: 'center' });
@@ -432,7 +428,7 @@
         const textSmart = new fabric.Text('SMART', { left: 0, top: 105, fontFamily: 'Montserrat', fontWeight: '300', fontSize: 48, fill: '#ffffff', originX: 'center', originY: 'center' });
         
         const logoGroup = new fabric.Group([logoBg, cyanBox, letterG, dot, textGesto, textSmart], {
-            left: cw - (cw * 0.1), top: ch - (ch * 0.05), // Anclado siempre a la esquina inferior derecha proporcionalmente
+            left: cw - (cw * 0.1), top: ch - (ch * 0.05),
             scaleX: 0.20, scaleY: 0.20, 
             originX: 'center', originY: 'center',
             shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.5)', blur: 10 }),
@@ -450,7 +446,7 @@
         canvas.renderAll();
         const link = document.createElement('a');
         link.download = `GestoSmart_HQ_${currentFormat.replace(':','')}_${Date.now()}.png`;
-        link.href = canvas.toDataURL({ format: 'png', quality: 1, multiplier: 1 }); // Escala 1:1 resolución nativa
+        link.href = canvas.toDataURL({ format: 'png', quality: 1, multiplier: 1 });
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
